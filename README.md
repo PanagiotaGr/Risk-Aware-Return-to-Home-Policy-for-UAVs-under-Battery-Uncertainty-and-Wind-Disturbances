@@ -33,24 +33,19 @@ This project implements a **risk-aware RTH decision policy** that balances missi
 
 ## Core Idea
 
-At runtime, the system estimates the probability of safe return given current conditions:
+Core Idea
 
-<p align="center">
-  <img alt="p(return)" src="https://latex.codecogs.com/svg.image?\Large%20p_{\mathrm{return}}(t)=\Pr\big(\text{reach home before battery depletion}\ \big|\ \text{state,wind}\big)" />
-</p>
+At runtime, the system estimates the probability of safe return given current conditions:
 
 A simple decision rule can be expressed as:
 
-<p align="center">
-  <img alt="decision rule" src="https://latex.codecogs.com/svg.image?\Large%20\text{if }p_{\mathrm{return}}(t)<\tau\text{ then trigger RTH}" />
-</p>
-
 where:
 
-* <img alt="tau" src="https://latex.codecogs.com/svg.image?\tau" /> is a user-defined safety threshold (risk tolerance)
-* lower <img alt="tau" src="https://latex.codecogs.com/svg.image?\tau" /> → more aggressive missions
-* higher <img alt="tau" src="https://latex.codecogs.com/svg.image?\tau" /> → more conservative, safer behaviour
+is a user-defined safety threshold (risk tolerance)
 
+lower → more aggressive missions
+
+higher → more conservative, safer behaviour
 ---
 
 ## ROS 2 Packages
