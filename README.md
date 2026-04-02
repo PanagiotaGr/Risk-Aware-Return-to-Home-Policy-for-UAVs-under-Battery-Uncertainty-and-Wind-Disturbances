@@ -1,165 +1,161 @@
 # Risk-Aware Return-to-Home Policy for UAVs
+### Python standalone implementation — no ROS 2 required
 
-### Battery Uncertainty + Wind Disturbances (ROS 2 Jazzy)
-
-> ROS 2 (Jazzy) simulation of a UAV executing a mission with a **risk-aware Return-to-Home (RTH)** policy under **battery uncertainty** and **wind disturbances**. The goal is to decide *when to abort the mission and return safely* by explicitly reasoning about uncertainty and risk.
-
----
-
-## Table of Contents
-
-* [Overview](#overview)
-* [Core Idea](#core-idea)
-* [ROS 2 Packages](#ros-2-packages)
-* [System Architecture](#system-architecture)
-* [ROS 2 Interfaces](#ros-2-interfaces)
-* [Installation](#installation)
-* [Run](#run)
-* [Scenarios](#scenarios)
-* [Evaluation Metrics](#evaluation-metrics)
-* [Extensions](#extensions)
-* [Author](#author)
-* [License](#license)
+> Βασισμένο στο [PanagiotaGr/Risk-Aware-Return-to-Home-Policy-for-UAVs-under-Battery-Uncertainty-and-Wind-Disturbances](https://github.com/PanagiotaGr/Risk-Aware-Return-to-Home-Policy-for-UAVs-under-Battery-Uncertainty-and-Wind-Disturbances)
 
 ---
 
-## Overview
+## Δομή project
 
-UAV missions are often constrained by uncertain battery state (SoC estimation error, temperature effects, aging) and external disturbances such as wind and gusts. A risk-neutral policy may continue too long and fail to return safely, while an overly conservative policy wastes mission time.
-
-This project implements a **risk-aware RTH decision policy** that balances mission progress against safety under uncertainty.
-
----
-
-## Core Idea
-
-Core Idea
-
-At runtime, the system estimates the probability of safe return given current conditions:
-
-A simple decision rule can be expressed as:
-
-where:
-
-is a user-defined safety threshold (risk tolerance)
-
-lower → more aggressive missions
-
-higher → more conservative, safer behaviour
----
-
-## ROS 2 Packages
-
-* `uav_sim` — UAV simulation (wind + battery model)
-* `uav_planner` — risk-aware RTH decision policy
-* `uav_interfaces` — custom ROS 2 messages
-
----
-
-## System Architecture
-
-```text
-uav_sim  --->  publishes state, battery, wind  --->  uav_planner  --->  RTH decision
-   |                                              |                  |
-   |                                              v                  v
-   +--------------------------- visualization / logs ---------> mission outcomes
+```
+uav_project/
+├── uav_sim/
+│   ├── state.py          # UavState dataclass  (≡ uav_interfaces/UavState.msg)
+│   └── sim.py            # UAVSim              (≡ uav_sim/sim_node.py)
+│
+├── uav_planner/
+│   ├── planner.py        # RiskAwarePlanner     (≡ uav_planner/planner_node.py)
+│   └── mc_planner.py     # MCRiskAwarePlanner   (Monte Carlo extension)
+│
+├── uav_rl/
+│   └── agent.py          # QLearningAgent       (≡ uav_reinflearning/agent_node.py)
+│
+├── scripts/
+│   ├── run_simulation.py  # κύριο entry point   (≡ scripts/run_batch.sh)
+│   └── analyze_runs.py    # metrics + plots      (≡ scripts/analyze_runs.py)
+│
+└── logs/                  # CSV logs + PNG plots
 ```
 
-Typical loop:
+---
 
-1. simulator publishes UAV state, battery estimate, and wind disturbance
-2. planner predicts return feasibility / risk
-3. planner either continues mission or triggers RTH
+## Αντιστοιχία με ROS 2
+
+| ROS 2 component | Python equivalent |
+|---|---|
+| `uav_interfaces/UavState.msg` | `uav_sim/state.py → UavState` |
+| `uav_sim/sim_node.py` | `uav_sim/sim.py → UAVSim` |
+| `uav_planner/planner_node.py` | `uav_planner/planner.py → RiskAwarePlanner` |
+| `uav_reinflearning/agent_node.py` | `uav_rl/agent.py → QLearningAgent` |
+| `scripts/run_batch.sh` | `scripts/run_simulation.py` |
+| `scripts/analyze_runs.py` | `scripts/analyze_runs.py` |
+| `/uav/cmd_vel` topic | `sim.set_cmd(vx, vy)` |
+| `/uav/mode` topic | `sim.set_mode(mode)` |
+| `/uav/state` topic | `sim.get_state()` |
 
 ---
 
-## ROS 2 Interfaces
-
-(Example interfaces; keep or adapt to your implementation.)
-
-### Subscriptions
-
-| Topic          | Type                          | Description                 |
-| -------------- | ----------------------------- | --------------------------- |
-| `/uav/state`   | `uav_interfaces/UavState`     | position, velocity, heading |
-| `/uav/battery` | `uav_interfaces/BatteryState` | SoC + uncertainty           |
-| `/uav/wind`    | `uav_interfaces/Wind`         | wind vector + gusts         |
-
-### Publications
-
-| Topic              | Type               | Description               |
-| ------------------ | ------------------ | ------------------------- |
-| `/uav/rth_trigger` | `std_msgs/Bool`    | RTH decision              |
-| `/uav/risk_return` | `std_msgs/Float32` | risk / return probability |
-| `/uav/mode`        | `std_msgs/String`  | `MISSION` or `RTH`        |
-
----
-
-## Installation
+## Εγκατάσταση
 
 ```bash
-colcon build
-source install/setup.bash
+pip install numpy matplotlib pandas scipy
 ```
 
 ---
 
-## Run
+## Εκτέλεση
 
-In separate terminals:
-
-### 1) Start simulator
-
+### Ένα run με plots
 ```bash
-source install/setup.bash
-ros2 run uav_sim uav_sim
+python scripts/run_simulation.py --mode single
 ```
 
-### 2) Start planner
-
+### Batch evaluation (N runs)
 ```bash
-source install/setup.bash
-ros2 run uav_planner uav_planner
+python scripts/run_simulation.py --mode batch --n_runs 50
 ```
+
+### Sensitivity sweep (z_delta / τ)
+```bash
+python scripts/run_simulation.py --mode sweep --n_runs 20
+```
+
+### Και τα 5 scenarios (README scenarios)
+```bash
+python scripts/run_simulation.py --mode scenarios
+```
+
+### Q-Learning agent training
+```bash
+python scripts/run_simulation.py --mode rl_train --n_runs 1000
+```
+
+---
+
+## Αλγόριθμος RTH
+
+### Gaussian planner (αναλυτικός)
+
+Trigger RTH αν:
+```
+battery_hat  <=  K * dist_home  +  z_delta * sigma_b
+```
+- `K = 0.05`  (energy proxy per metre)
+- `z_delta = Φ⁻¹(δ)`, π.χ. δ=0.95 → z=1.645
+- `sigma_b = 0.05` (battery uncertainty std)
+
+### Monte Carlo planner
+
+Σε κάθε tick κάνει N samples:
+```python
+b_sample  ~ N(battery_hat, sigma_b)
+w_sample  ~ max(0, N(|wind|, sigma_w))
+cost      =  K * dist + wind_factor * max(0, headwind) * dist
+safe      =  b_sample - cost > margin
+```
+Trigger RTH αν `P(safe) < τ`.
+
+---
+
+## Φυσικό μοντέλο (sim.py)
+
+```
+pos += (v_cmd + wind) * dt
+drain = (α * |v_cmd| + β * |wind| + γ) * dt
+battery_true -= drain
+battery_hat  = battery_true + N(0, meas_sigma)
+```
+
+### Default παράμετροι
+| Param | Default | Περιγραφή |
+|---|---|---|
+| `gust_prob` | 0.05 | πιθανότητα gust ανά tick |
+| `wind_sigma` | 0.5 | std gust (m/s) |
+| `meas_sigma` | 0.02 | battery measurement noise |
+| `alpha` | 0.01 | drain ανά |v| |
+| `beta` | 0.02 | drain ανά |wind| |
+| `gamma` | 0.001 | baseline drain |
+| `dt` | 0.1 | timestep (s) |
 
 ---
 
 ## Scenarios
 
-Suggested scenarios to validate behaviour:
-
-* increasing headwind during outbound leg
-* gust bursts near the end of the mission
-* biased SoC estimate (battery uncertainty)
-* sudden energy drain event (fault injection)
+| Scenario | gust_prob | wind_sigma | meas_sigma | Περιγραφή |
+|---|---|---|---|---|
+| `calm` | 0.01 | 0.1 | 0.02 | Ήρεμη πτήση |
+| `headwind` | 0.02 | 0.3 | 0.02 | Αυξανόμενος αντίθετος άνεμος |
+| `gusts` | 0.15 | 1.2 | 0.03 | Εκρήξεις ανέμου |
+| `biased_soc` | 0.03 | 0.3 | 0.12 | Μεγάλη αβεβαιότητα μπαταρίας |
+| `fault` | 0.03 | 0.4 | 0.02 | Fault injection (πολύ μεγάλο drain) |
 
 ---
 
 ## Evaluation Metrics
 
-* **Mission success rate** (goal reached and safe return)
-* **Safe-return rate** (RTH triggered in time)
-* **Failure rate** (battery depletion before home)
-* **Abort efficiency** (how early/late RTH is triggered)
-* **Sensitivity to** <img alt="tau" src="https://latex.codecogs.com/svg.image?\tau" /> (risk tolerance sweep)
-
----
-
-## Extensions
-
-* Monte Carlo return prediction under wind and battery uncertainty
-* adaptive <img alt="tau" src="https://latex.codecogs.com/svg.image?\tau" /> based on mission criticality
-* integration with trajectory optimization (energy-aware paths)
-* sim-to-real validation with real battery models and wind estimation
+- **Mission success rate**: έφτασε goal AND επέστρεψε σπίτι χωρίς crash
+- **Safe return rate**: επέστρεψε σπίτι χωρίς να εξαντληθεί η μπαταρία
+- **Crash rate**: μπαταρία → 0 πριν επιστρέψει
+- **RTH trigger time**: πότε ενεργοποιήθηκε το RTH
+- **Sensitivity to τ**: sweep z_delta 0.0 → 3.0
 
 ---
 
 ## Author
 
-**Panagiota Grosdouli**
-
----
+**Panagiota Grosdouli** — original ROS 2 implementation  
+Python standalone adaptation
 
 ## License
 
-MIT License
+MIT
