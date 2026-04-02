@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UAV Risk-Aware RTH Simulator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f8f7f5;color:#111;padding:16px;max-width:960px;margin:auto}
+h1{font-size:18px;font-weight:600;margin-bottom:4px}
+.sub{font-size:13px;color:#666;margin-bottom:16px}
+.panel-row{display:grid;grid-template-columns:260px 1fr;gap:14px;margin-bottom:14px}
+.panel{background:#fff;border:1px solid #e0ddd6;border-radius:10px;padding:14px}
+.panel-title{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.ctrl-row{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.ctrl-label{font-size:13px;color:#555;flex:1}
+.ctrl-val{font-size:13px;font-weight:600;color:#111;min-width:40px;text-align:right}
+input[type=range]{flex:1.5;height:4px;border-radius:2px}
+.metric-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.metric{background:#f0efe8;border-radius:8px;padding:10px 12px}
+.metric-label{font-size:11px;color:#888;margin-bottom:3px}
+.metric-val{font-size:20px;font-weight:600;color:#111}
+.metric-val.danger{color:#c0392b}
+.metric-val.success{color:#1a7a5e}
+.metric-val.warning{color:#9c6a00}
+.canvas-wrap{position:relative;height:270px;width:100%}
+.log-panel{background:#fff;border:1px solid #e0ddd6;border-radius:10px;padding:14px;margin-bottom:14px}
+.log-box{height:110px;overflow-y:auto;font-family:monospace;font-size:11.5px;color:#555;line-height:1.6;background:#fafaf8;border-radius:6px;padding:8px}
+.log-entry{padding:1px 0}
+.log-entry.warn{color:#9c6a00}
+.log-entry.danger{color:#c0392b}
+.log-entry.success{color:#1a7a5e}
+.log-entry.info{color:#185FA5}
+.btn-row{display:flex;gap:10px;margin-bottom:14px}
+button{padding:7px 18px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#111;font-size:14px;cursor:pointer;font-family:system-ui,sans-serif}
+button:hover{background:#f0efe8}
+button.primary{background:#185FA5;border-color:#185FA5;color:#fff}
+button.primary:hover{background:#0d4a87}
+button:disabled{opacity:.4;cursor:default}
+.mode-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600}
+.mode-badge.mission{background:#dceeff;color:#185FA5}
+.mode-badge.rth{background:#fde8e8;color:#c0392b}
+.mode-badge.landed{background:#d9f5ea;color:#1a7a5e}
+.mode-badge.failed{background:#fff0e0;color:#9c6a00}
+.risk-bar-wrap{height:12px;background:#e8e6e0;border-radius:6px;overflow:hidden;margin:4px 0}
+.risk-bar{height:100%;border-radius:6px;transition:width .3s,background .3s}
+.scenario-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.scenario-btn{padding:5px 12px;font-size:12px;border-radius:8px;border:1px solid #ddd;background:#fff;color:#555;cursor:pointer;font-family:system-ui,sans-serif}
+.scenario-btn:hover{background:#f0efe8;color:#111}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+</style>
+</head>
+<body>
+<h1>Risk-Aware Return-to-Home — UAV Simulator</h1>
+<div class="sub">ROS 2 Jazzy · Battery uncertainty + wind disturbances · Monte Carlo RTH decision · <em>by PanagiotaGr</em></div>
+
+<div class="scenario-row">
+  <span style="font-size:12px;color:#888">Scenario:</span>
+  <button class="scenario-btn" onclick="loadScenario('calm')">Calm flight</button>
+  <button class="scenario-btn" onclick="loadScenario('headwind')">Increasing headwind</button>
+  <button class="scenario-btn" onclick="loadScenario('gusts')">Gust bursts</button>
+  <button class="scenario-btn" onclick="loadScenario('biased_soc')">Biased SoC</button>
+  <button class="scenario-btn" onclick="loadScenario('fault')">Fault injection</button>
+</div>
+
+<div class="panel-row">
+  <div class="panel">
+    <div class="panel-title">Parameters</div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Risk threshold τ</span>
+      <input type="range" id="tau" min="0.1" max="0.95" step="0.05" value="0.7">
+      <span class="ctrl-val" id="tau-val">0.70</span>
+    </div>
+    <div style="font-size:11px;color:#aaa;margin-bottom:9px">← aggressive · conservative →</div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Battery capacity (Wh)</span>
+      <input type="range" id="batt" min="30" max="150" step="5" value="80">
+      <span class="ctrl-val" id="batt-val">80</span>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">SoC uncertainty σ</span>
+      <input type="range" id="soc-unc" min="0.01" max="0.20" step="0.01" value="0.05">
+      <span class="ctrl-val" id="soc-unc-val">0.05</span>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Wind speed (m/s)</span>
+      <input type="range" id="wind" min="0" max="15" step="0.5" value="3">
+      <span class="ctrl-val" id="wind-val">3.0</span>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">Wind uncertainty σ</span>
+      <input type="range" id="wind-unc" min="0" max="5" step="0.25" value="1">
+      <span class="ctrl-val" id="wind-unc-val">1.0</span>
+    </div>
+    <div class="ctrl-row">
+      <span class="ctrl-label">MC samples</span>
+      <input type="range" id="mc-n" min="100" max="2000" step="100" value="500">
+      <span class="ctrl-val" id="mc-n-val">500</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Flight map</div>
+    <div class="canvas-wrap">
+      <canvas id="mapCanvas" style="width:100%;height:100%"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="metric-row">
+  <div class="metric">
+    <div class="metric-label">Mode</div>
+    <div id="mode-display"><span class="mode-badge mission">MISSION</span></div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Battery SoC</div>
+    <div class="metric-val success" id="soc-display">100.0%</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">P(safe return)</div>
+    <div class="metric-val success" id="prob-display">1.000</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Distance to home</div>
+    <div class="metric-val" id="dist-display">0 m</div>
+  </div>
+</div>
+
+<div class="panel" style="margin-bottom:14px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <div class="panel-title" style="margin:0">P(safe return) — risk bar</div>
+    <div style="font-size:12px;color:#888">τ = <span id="tau-label">0.70</span></div>
+  </div>
+  <div class="risk-bar-wrap"><div class="risk-bar" id="risk-bar" style="width:100%;background:#185FA5"></div></div>
+  <div style="display:flex;justify-content:space-between;font-size:11px;color:#aaa;margin-top:3px">
+    <span>0 (certain fail)</span><span>τ threshold</span><span>1 (certain safe)</span>
+  </div>
+</div>
+
+<div class="panel" style="margin-bottom:14px">
+  <div class="panel-title">P(safe return) &amp; SoC over time</div>
+  <div style="position:relative;height:180px">
+    <canvas id="histChart"></canvas>
+  </div>
+  <div style="display:flex;gap:16px;margin-top:6px;font-size:12px;color:#888">
+    <span><span style="display:inline-block;width:14px;height:3px;background:#185FA5;vertical-align:middle;margin-right:4px;border-radius:2px"></span>P(safe return)</span>
+    <span><span style="display:inline-block;width:14px;height:3px;background:#1D9E75;vertical-align:middle;margin-right:4px;border-radius:2px;border-top:2px dashed #1D9E75"></span>SoC estimate</span>
+  </div>
+</div>
+
+<div class="btn-row">
+  <button class="primary" id="btn-start" onclick="startSim()">▶ Start simulation</button>
+  <button id="btn-pause" onclick="pauseSim()" disabled>⏸ Pause</button>
+  <button id="btn-reset" onclick="resetSim()">↺ Reset</button>
+</div>
+
+<div class="log-panel">
+  <div class="panel-title">ROS 2 topic log — /uav/state · /uav/battery · /uav/wind · /uav/risk_return · /uav/mode</div>
+  <div class="log-box" id="log-box"></div>
+</div>
+
+<div class="two-col">
+  <div class="panel">
+    <div class="panel-title">Evaluation metrics</div>
+    <table style="width:100%;font-size:13px;border-collapse:collapse">
+      <tr><td style="color:#888;padding:4px 0">Missions run</td><td style="text-align:right;font-weight:600" id="m-runs">0</td></tr>
+      <tr><td style="color:#888;padding:4px 0">Mission success rate</td><td style="text-align:right;font-weight:600" id="m-success">—</td></tr>
+      <tr><td style="color:#888;padding:4px 0">Safe return rate</td><td style="text-align:right;font-weight:600" id="m-safe">—</td></tr>
+      <tr><td style="color:#888;padding:4px 0">Failure rate</td><td style="text-align:right;font-weight:600" id="m-fail">—</td></tr>
+      <tr><td style="color:#888;padding:4px 0">Avg RTH trigger time</td><td style="text-align:right;font-weight:600" id="m-rth-t">—</td></tr>
+    </table>
+  </div>
+  <div class="panel">
+    <div class="panel-title">Monte Carlo energy cost distribution</div>
+    <div style="position:relative;height:130px">
+      <canvas id="mcChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+const S={
+  running:false,paused:false,t:0,dt:0.2,mode:'MISSION',
+  pos:{x:0,y:0},goal:{x:0,y:0},home:{x:0,y:0},heading:0,
+  soc:1.0,soc_est:1.0,wind_v:3.0,wind_dir:0,batt_cap:80,
+  p_safe:1.0,gust_active:false,fault_active:false,
+  path:[],metrics:{runs:0,success:0,safe_ret:0,fail:0,rth_times:[]},
+  scenario:null,rth_triggered_t:-1,interval:null
+};
+
+function gp(id){return parseFloat(document.getElementById(id).value)}
+function randn(){
+  let u=0,v=0;
+  while(!u)u=Math.random();while(!v)v=Math.random();
+  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+function energyCost(dist,wind_head,cap){
+  return (dist*0.012+Math.max(0,wind_head)*dist*0.003)/cap;
+}
+function mcPSafe(soc_est,soc_sig,pos,home,wv,ws,wd,cap,n){
+  const dist=Math.hypot(pos.x-home.x,pos.y-home.y);
+  if(dist<5)return 1.0;
+  const angle=Math.atan2(home.y-pos.y,home.x-pos.x);
+  let safe=0;
+  for(let i=0;i<n;i++){
+    const ss=Math.max(0.01,soc_est+randn()*soc_sig);
+    const ws2=Math.max(0,wv+randn()*ws);
+    const wh=ws2*Math.cos(wd-angle);
+    if(ss-energyCost(dist,wh,cap)>0.05)safe++;
+  }
+  return safe/n;
+}
+
+let histChart=null,mcChart=null;
+function initCharts(){
+  if(histChart){histChart.destroy();}
+  if(mcChart){mcChart.destroy();}
+  const ctx1=document.getElementById('histChart').getContext('2d');
+  histChart=new Chart(ctx1,{
+    type:'line',
+    data:{labels:[],datasets:[
+      {label:'P(safe)',data:[],borderColor:'#185FA5',backgroundColor:'rgba(24,95,165,0.07)',tension:0.3,pointRadius:0,borderWidth:2,fill:true},
+      {label:'SoC',data:[],borderColor:'#1D9E75',tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[5,4]}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{maxTicksLimit:8,font:{size:11}},title:{display:true,text:'Time (s)',font:{size:11}}},
+        y:{min:0,max:1.05,ticks:{maxTicksLimit:5,font:{size:11}}}
+      },animation:{duration:0}}
+  });
+  const labels=[];for(let i=0;i<=20;i++)labels.push((i*0.05).toFixed(2));
+  const ctx2=document.getElementById('mcChart').getContext('2d');
+  mcChart=new Chart(ctx2,{
+    type:'bar',
+    data:{labels,datasets:[{data:new Array(21).fill(0),backgroundColor:'rgba(24,95,165,0.45)',borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{maxTicksLimit:6,font:{size:10}},title:{display:true,text:'Energy cost (fraction)',font:{size:10}}},
+        y:{ticks:{maxTicksLimit:4,font:{size:10}},title:{display:true,text:'Count',font:{size:10}}}
+      },animation:{duration:0}}
+  });
+}
+
+const canvas=document.getElementById('mapCanvas'),ctx=canvas.getContext('2d');
+let mW=0,mH=0;
+function resize(){
+  const p=canvas.parentElement;mW=p.clientWidth;mH=p.clientHeight;
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=mW*dpr;canvas.height=mH*dpr;
+  canvas.style.width=mW+'px';canvas.style.height=mH+'px';
+  ctx.scale(dpr,dpr);
+}
+function w2s(wx,wy){return{x:mW/2+wx*1.2,y:mH/2-wy*1.2};}
+function drawMap(){
+  ctx.clearRect(0,0,mW,mH);
+  ctx.fillStyle='#f9f8f6';ctx.fillRect(0,0,mW,mH);
+  ctx.strokeStyle='rgba(0,0,0,0.05)';ctx.lineWidth=0.5;
+  for(let g=-200;g<=200;g+=40){const s=w2s(g,0);ctx.beginPath();ctx.moveTo(s.x,0);ctx.lineTo(s.x,mH);ctx.stroke();}
+  for(let g=-200;g<=200;g+=40){const s=w2s(0,g);ctx.beginPath();ctx.moveTo(0,s.y);ctx.lineTo(mW,s.y);ctx.stroke();}
+
+  const home=w2s(S.home.x,S.home.y),goal=w2s(S.goal.x,S.goal.y);
+  ctx.strokeStyle='rgba(99,153,34,0.3)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(home.x,home.y);ctx.lineTo(goal.x,goal.y);ctx.stroke();
+  ctx.setLineDash([]);
+
+  if(S.path.length>1){
+    const col=S.mode==='RTH'?'#c0392b':S.mode==='LANDED'?'#1a7a5e':'#185FA5';
+    ctx.strokeStyle=col;ctx.lineWidth=2;ctx.globalAlpha=0.55;
+    ctx.beginPath();const p0=w2s(S.path[0].x,S.path[0].y);ctx.moveTo(p0.x,p0.y);
+    for(let i=1;i<S.path.length;i++){const pi=w2s(S.path[i].x,S.path[i].y);ctx.lineTo(pi.x,pi.y);}
+    ctx.stroke();ctx.globalAlpha=1;
+  }
+
+  const we=w2s(-90,-90),ws2=w2s(-90+S.wind_v*Math.cos(S.wind_dir)*7,-90+S.wind_v*Math.sin(S.wind_dir)*7);
+  ctx.strokeStyle='#BA7517';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(we.x,we.y);ctx.lineTo(ws2.x,ws2.y);ctx.stroke();
+  ctx.fillStyle='#BA7517';ctx.font='10px system-ui';ctx.fillText('wind',we.x+3,we.y-5);
+
+  ctx.fillStyle='#0F6E56';ctx.beginPath();ctx.arc(home.x,home.y,8,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='bold 10px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('H',home.x,home.y);
+
+  ctx.fillStyle='#533AB7';ctx.beginPath();ctx.arc(goal.x,goal.y,7,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.fillText('G',goal.x,goal.y);
+  ctx.textAlign='left';ctx.textBaseline='alphabetic';
+
+  const uav=w2s(S.pos.x,S.pos.y);
+  const uc=S.mode==='RTH'?'#c0392b':S.mode==='LANDED'?'#1a7a5e':S.mode==='FAILED'?'#e67e22':'#185FA5';
+  ctx.save();ctx.translate(uav.x,uav.y);ctx.rotate(-S.heading);
+  ctx.fillStyle=uc;ctx.beginPath();
+  ctx.moveTo(0,-10);ctx.lineTo(-7,6);ctx.lineTo(0,2);ctx.lineTo(7,6);ctx.closePath();ctx.fill();
+  ctx.restore();
+
+  const bx=mW-90,by=mH-28,bw=80;
+  ctx.fillStyle='rgba(0,0,0,0.08)';ctx.fillRect(bx,by,bw,8);
+  ctx.fillStyle=S.p_safe>gp('tau')?'#185FA5':'#c0392b';
+  ctx.fillRect(bx,by,bw*S.p_safe,8);
+  ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(bx+bw*gp('tau'),by-4,1.5,16);
+  ctx.font='10px system-ui';ctx.fillStyle='#666';ctx.fillText('P(safe)',bx,by-6);
+
+  if(S.gust_active){ctx.fillStyle='rgba(186,117,23,0.12)';ctx.fillRect(0,0,mW,mH);
+    ctx.fillStyle='#BA7517';ctx.font='bold 11px system-ui';ctx.fillText('GUST BURST',8,20);}
+  if(S.fault_active){ctx.fillStyle='rgba(192,57,43,0.10)';ctx.fillRect(0,0,mW,mH);
+    ctx.fillStyle='#c0392b';ctx.font='bold 11px system-ui';ctx.fillText('FAULT INJECTION',8,20);}
+}
+
+function log(msg,cls=''){
+  const box=document.getElementById('log-box');
+  const div=document.createElement('div');div.className='log-entry '+(cls||'');
+  div.textContent=`[${S.t.toFixed(1)}s] ${msg}`;
+  box.appendChild(div);box.scrollTop=box.scrollHeight;
+  while(box.children.length>200)box.removeChild(box.firstChild);
+}
+
+function resetSim(){
+  clearInterval(S.interval);
+  S.running=false;S.paused=false;S.t=0;S.mode='MISSION';
+  S.soc=1.0;S.soc_est=1.0;S.wind_v=gp('wind');
+  S.wind_dir=Math.random()*Math.PI*2;S.batt_cap=gp('batt');
+  S.p_safe=1.0;S.gust_active=false;S.fault_active=false;S.rth_triggered_t=-1;
+  const r=80;
+  S.home={x:-r/2,y:-r/2};
+  S.goal={x:r/2+(Math.random()*40-20),y:r/2+(Math.random()*40-20)};
+  S.pos={...S.home};S.path=[{...S.pos}];
+  document.getElementById('btn-start').disabled=false;
+  document.getElementById('btn-pause').disabled=true;
+  document.getElementById('btn-pause').textContent='⏸ Pause';
+  updateUI();initCharts();drawMap();
+  document.getElementById('log-box').innerHTML='';
+  log('/uav/state initialized','info');
+  log(`/uav/battery  SoC=1.00  σ=${gp('soc-unc').toFixed(2)}  cap=${S.batt_cap}Wh`,'info');
+  log(`/uav/wind  v=${S.wind_v.toFixed(1)}m/s  dir=${(S.wind_dir*180/Math.PI).toFixed(0)}°  σ=${gp('wind-unc').toFixed(2)}`,'info');
+}
+
+function loadScenario(name){
+  S.scenario=name;
+  const b=document.getElementById('batt'),w=document.getElementById('wind');
+  const su=document.getElementById('soc-unc'),wu=document.getElementById('wind-unc'),tau=document.getElementById('tau');
+  if(name==='calm'){b.value=100;w.value=1;su.value=0.03;wu.value=0.5;tau.value=0.6;}
+  else if(name==='headwind'){b.value=80;w.value=4;su.value=0.04;wu.value=2;tau.value=0.75;}
+  else if(name==='gusts'){b.value=75;w.value=5;su.value=0.05;wu.value=3;tau.value=0.80;}
+  else if(name==='biased_soc'){b.value=70;w.value=2;su.value=0.15;wu.value=1;tau.value=0.85;}
+  else if(name==='fault'){b.value=90;w.value=3;su.value=0.06;wu.value=1.5;tau.value=0.70;}
+  updateSliders();resetSim();
+  log(`Scenario loaded: ${name}`,'info');
+}
+
+function updateSliders(){
+  document.getElementById('tau-val').textContent=gp('tau').toFixed(2);
+  document.getElementById('tau-label').textContent=gp('tau').toFixed(2);
+  document.getElementById('batt-val').textContent=document.getElementById('batt').value;
+  document.getElementById('soc-unc-val').textContent=gp('soc-unc').toFixed(2);
+  document.getElementById('wind-val').textContent=gp('wind').toFixed(1);
+  document.getElementById('wind-unc-val').textContent=gp('wind-unc').toFixed(1);
+  document.getElementById('mc-n-val').textContent=document.getElementById('mc-n').value;
+}
+['tau','batt','soc-unc','wind','wind-unc','mc-n'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',()=>{updateSliders();if(!S.running)resetSim();});
+});
+
+function updateUI(){
+  const socPct=Math.max(0,S.soc_est*100);
+  const sEl=document.getElementById('soc-display');
+  sEl.textContent=socPct.toFixed(1)+'%';
+  sEl.className='metric-val '+(socPct<20?'danger':socPct<40?'warning':'success');
+  const pEl=document.getElementById('prob-display');
+  pEl.textContent=S.p_safe.toFixed(3);
+  pEl.className='metric-val '+(S.p_safe<gp('tau')?'danger':S.p_safe<gp('tau')+0.1?'warning':'success');
+  document.getElementById('dist-display').textContent=Math.hypot(S.pos.x-S.home.x,S.pos.y-S.home.y).toFixed(0)+'m';
+  const mc=S.mode.toLowerCase();
+  document.getElementById('mode-display').innerHTML=`<span class="mode-badge ${mc}">${S.mode}</span>`;
+  const rb=document.getElementById('risk-bar');
+  rb.style.width=(S.p_safe*100).toFixed(1)+'%';
+  rb.style.background=S.p_safe<gp('tau')?'#c0392b':'#185FA5';
+  const m=S.metrics;
+  document.getElementById('m-runs').textContent=m.runs;
+  if(m.runs>0){
+    document.getElementById('m-success').textContent=((m.success/m.runs)*100).toFixed(0)+'%';
+    document.getElementById('m-safe').textContent=((m.safe_ret/m.runs)*100).toFixed(0)+'%';
+    document.getElementById('m-fail').textContent=((m.fail/m.runs)*100).toFixed(0)+'%';
+    document.getElementById('m-rth-t').textContent=m.rth_times.length>0?(m.rth_times.reduce((a,b)=>a+b)/m.rth_times.length).toFixed(1)+'s':'N/A';
+  }
+}
+
+function finish(outcome){
+  S.running=false;clearInterval(S.interval);
+  S.metrics.runs++;
+  if(outcome==='success'){S.metrics.success++;S.metrics.safe_ret++;}
+  else if(outcome==='rth_safe'){S.metrics.safe_ret++;}
+  else if(outcome==='fail'){S.metrics.fail++;}
+  updateUI();drawMap();
+  document.getElementById('btn-start').disabled=false;
+  document.getElementById('btn-pause').disabled=true;
+}
+
+function tick(){
+  if(!S.running||S.paused)return;
+  S.t+=S.dt;
+  const sc=S.scenario;
+  if(sc==='headwind')S.wind_v=Math.min(12,gp('wind')+S.t*0.05);
+  if(sc==='gusts')S.gust_active=(Math.floor(S.t/8)%2===1);
+  if(sc==='fault')S.fault_active=(S.t>25&&S.t<35);
+  if(S.gust_active)S.wind_v=gp('wind')+(4+randn()*2);
+  else if(sc!=='headwind')S.wind_v=Math.max(0,gp('wind')+randn()*0.3);
+  S.wind_dir+=randn()*0.02;
+  const sig=gp('soc-unc');
+  const bias=sc==='biased_soc'?0.08:0;
+  S.soc_est=Math.max(0,S.soc+bias+randn()*sig*0.3);
+  const tau=gp('tau'),n=parseInt(gp('mc-n')||500),wu=gp('wind-unc'),cap=gp('batt');
+  S.p_safe=mcPSafe(S.soc_est,sig,S.pos,S.home,S.wind_v,wu,S.wind_dir,cap,n);
+
+  if(S.mode==='MISSION'){
+    const dx=S.goal.x-S.pos.x,dy=S.goal.y-S.pos.y,dg=Math.hypot(dx,dy);
+    if(dg<8){S.mode='LANDED';log('/uav/mode → LANDED  Goal reached!','success');finish('success');return;}
+    S.heading=Math.atan2(dy,dx);
+    const spd=10-S.wind_v*Math.cos(S.wind_dir-S.heading)*0.3;
+    S.pos.x+=Math.cos(S.heading)*spd*S.dt;S.pos.y+=Math.sin(S.heading)*spd*S.dt;
+    const drain=0.0008*(1+S.wind_v*0.04)*(S.fault_active?3:1);
+    S.soc=Math.max(0,S.soc-drain);
+    if(S.p_safe<tau){
+      S.mode='RTH';S.rth_triggered_t=S.t;
+      log(`/uav/rth_trigger → TRUE  P(safe)=${S.p_safe.toFixed(4)} < τ=${tau.toFixed(2)}`,'danger');
+      log('/uav/mode → RTH','warn');
+      S.metrics.rth_times.push(S.t);
+    }
+    if(S.soc<=0.02){log('BATTERY DEPLETED — mission failed!','danger');S.mode='FAILED';finish('fail');return;}
+  } else if(S.mode==='RTH'){
+    const dx=S.home.x-S.pos.x,dy=S.home.y-S.pos.y,dh=Math.hypot(dx,dy);
+    if(dh<8){S.mode='LANDED';log('/uav/mode → LANDED  Returned safely!','success');finish('rth_safe');return;}
+    S.heading=Math.atan2(dy,dx);
+    const spd=10-S.wind_v*Math.cos(S.wind_dir-S.heading)*0.3;
+    S.pos.x+=Math.cos(S.heading)*spd*S.dt;S.pos.y+=Math.sin(S.heading)*spd*S.dt;
+    const drain=0.0008*(1+S.wind_v*0.04)*(S.fault_active?3:1);
+    S.soc=Math.max(0,S.soc-drain);
+    if(S.soc<=0.02){log('BATTERY DEPLETED DURING RTH!','danger');S.mode='FAILED';finish('fail');return;}
+  }
+
+  S.path.push({...S.pos});if(S.path.length>600)S.path.shift();
+
+  const tick_n=Math.round(S.t/S.dt);
+  if(tick_n%5===0){
+    log(`/uav/state  x=${S.pos.x.toFixed(1)} y=${S.pos.y.toFixed(1)}  mode=${S.mode}`);
+    log(`/uav/battery  SoC_est=${S.soc_est.toFixed(3)}  SoC_true=${S.soc.toFixed(3)}`);
+    log(`/uav/wind  v=${S.wind_v.toFixed(2)}m/s  dir=${(S.wind_dir*180/Math.PI).toFixed(0)}°`);
+    log(`/uav/risk_return  P=${S.p_safe.toFixed(4)}${S.mode==='RTH'?' [RTH active]':''}`,S.p_safe<tau?'danger':'info');
+  }
+  if(histChart&&tick_n%3===0){
+    histChart.data.labels.push(S.t.toFixed(1));
+    histChart.data.datasets[0].data.push(+S.p_safe.toFixed(4));
+    histChart.data.datasets[1].data.push(+S.soc_est.toFixed(4));
+    if(histChart.data.labels.length>250){histChart.data.labels.shift();histChart.data.datasets[0].data.shift();histChart.data.datasets[1].data.shift();}
+    histChart.update();
+  }
+  if(mcChart&&tick_n%20===0){
+    const bins=new Array(21).fill(0);
+    const dh=Math.hypot(S.pos.x-S.home.x,S.pos.y-S.home.y);
+    const ah=Math.atan2(S.home.y-S.pos.y,S.home.x-S.pos.x);
+    for(let i=0;i<300;i++){
+      const ww=Math.max(0,S.wind_v+randn()*wu);
+      const wh=ww*Math.cos(S.wind_dir-ah);
+      const cost=energyCost(dh,wh,cap);
+      bins[Math.min(20,Math.floor(cost*20))]++;
+    }
+    mcChart.data.datasets[0].data=bins;mcChart.update();
+  }
+  updateUI();drawMap();
+}
+
+function startSim(){
+  if(S.mode==='LANDED'||S.mode==='FAILED')resetSim();
+  S.running=true;S.paused=false;
+  document.getElementById('btn-start').disabled=true;
+  document.getElementById('btn-pause').disabled=false;
+  log('Simulation started','info');
+  S.interval=setInterval(tick,50);
+}
+function pauseSim(){
+  S.paused=!S.paused;
+  document.getElementById('btn-pause').textContent=S.paused?'▶ Resume':'⏸ Pause';
+  log(S.paused?'Paused':'Resumed','info');
+}
+
+updateSliders();
+window.addEventListener('resize',()=>{resize();drawMap();});
+setTimeout(()=>{resize();resetSim();},120);
+</script>
+</body>
+</html>
