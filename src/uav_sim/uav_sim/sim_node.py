@@ -1,162 +1,117 @@
+#!/usr/bin/env python3
+
+import math
+import random
+
 import rclpy
 from rclpy.node import Node
-import numpy as np
 
-import csv
-import os
-from datetime import datetime
-
-from geometry_msgs.msg import Twist, Pose2D
-from std_msgs.msg import UInt8
-
-from uav_interfaces.msg import UavState  # ✅ correct import
-
-DT = 0.1
+from uav_interfaces.msg import UavState, BatteryState, WindState
 
 
-class UAVSim(Node):
+class UAVSimNode(Node):
     def __init__(self):
         super().__init__('uav_sim')
 
-        # -------------------------
-        # ROS parameters (editable at runtime via --ros-args -p ...)
-        # -------------------------
-        self.declare_parameter('gust_prob', 0.05)          # probability per tick
-        self.declare_parameter('wind_sigma', 0.5)          # gust magnitude (std)
-        self.declare_parameter('meas_sigma', 0.02)         # battery measurement noise std
+        self.state_pub = self.create_publisher(UavState, '/uav/state', 10)
+        self.battery_pub = self.create_publisher(BatteryState, '/uav/battery', 10)
+        self.wind_pub = self.create_publisher(WindState, '/uav/wind', 10)
 
-        self.declare_parameter('alpha', 0.01)              # drain per commanded speed
-        self.declare_parameter('beta', 0.02)               # drain per wind magnitude
-        self.declare_parameter('gamma', 0.001)             # baseline drain
+        self.timer = self.create_timer(0.1, self.update)
 
-        self.declare_parameter('log_dir', os.path.expanduser('~/uav_ws/logs'))
+        self.x = 0.0
+        self.y = 0.0
+        self.z = 10.0
 
-        # read params
-        self.gust_prob = float(self.get_parameter('gust_prob').value)
-        self.wind_sigma = float(self.get_parameter('wind_sigma').value)
-        self.meas_sigma = float(self.get_parameter('meas_sigma').value)
+        self.vx = 1.5
+        self.vy = 0.0
+        self.vz = 0.0
 
-        self.alpha = float(self.get_parameter('alpha').value)
-        self.beta = float(self.get_parameter('beta').value)
-        self.gamma = float(self.get_parameter('gamma').value)
+        self.heading = 0.0
+        self.soc = 1.0
+        self.mode = 'MISSION'
 
-        self.log_dir = str(self.get_parameter('log_dir').value)
+        self.home_x = 0.0
+        self.home_y = 0.0
 
-        # -------------------------
-        # State
-        # -------------------------
-        self.pose = Pose2D(x=0.0, y=0.0, theta=0.0)
-        self.vel_cmd = Twist()
+        self.get_logger().info('UAV simulator node started.')
 
-        self.battery_true = 1.0
-        self.battery_hat = 1.0
+    def update(self):
+        dt = 0.1
 
-        self.wind = np.array([0.0, 0.0], dtype=float)
+        wind_speed = 3.0 + random.gauss(0.0, 0.4)
+        wind_direction = 180.0 + random.gauss(0.0, 8.0)
+        gust_factor = max(1.0, random.gauss(1.15, 0.12))
 
-        # mode: 0=MISSION, 1=RETURN_HOME (planner sets it)
-        self.mode = 0
+        wind_rad = math.radians(wind_direction)
+        wind_x = wind_speed * math.cos(wind_rad) * 0.05
+        wind_y = wind_speed * math.sin(wind_rad) * 0.05
 
-        # -------------------------
-        # ROS interfaces
-        # -------------------------
-        self.cmd_sub = self.create_subscription(
-            Twist, '/uav/cmd_vel', self.cmd_cb, 10
-        )
-        self.mode_sub = self.create_subscription(
-            UInt8, '/uav/mode', self.mode_cb, 10
-        )
+        if self.mode == 'MISSION':
+            self.x += (self.vx + wind_x) * dt
+            self.y += (self.vy + wind_y) * dt
+        else:
+            dx = self.home_x - self.x
+            dy = self.home_y - self.y
+            dist = math.hypot(dx, dy)
 
-        self.state_pub = self.create_publisher(
-            UavState, '/uav/state', 10
-        )
+            if dist > 0.1:
+                self.x += 2.0 * dx / dist * dt
+                self.y += 2.0 * dy / dist * dt
 
-        # -------------------------
-        # Logging
-        # -------------------------
-        os.makedirs(self.log_dir, exist_ok=True)
-        stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        distance_to_home = math.hypot(self.x - self.home_x, self.y - self.home_y)
 
-        # (προαιρετικό) “tagging” στο filename με βασικά params
-        tag = f"gp{self.gust_prob}_ws{self.wind_sigma}_ms{self.meas_sigma}"
-        self.log_path = os.path.join(self.log_dir, f'run_{tag}_{stamp}.csv')
+        base_drain = 0.00045
+        wind_penalty = 0.00008 * max(0.0, wind_speed - 2.0)
+        gust_penalty = 0.00005 * (gust_factor - 1.0)
+        self.soc = max(0.0, self.soc - base_drain - wind_penalty - gust_penalty)
 
-        self.log_f = open(self.log_path, 'w', newline='')
-        self.writer = csv.writer(self.log_f)
-        self.writer.writerow([
-            't',
-            'x', 'y',
-            'vx_cmd', 'vy_cmd',
-            'wind_x', 'wind_y',
-            'battery_hat', 'battery_true',
-            'mode'
-        ])
+        stamp = self.get_clock().now().to_msg()
 
-        self.t = 0.0
-        self.get_logger().info(f'Logging to: {self.log_path}')
+        state_msg = UavState()
+        state_msg.header.stamp = stamp
+        state_msg.header.frame_id = 'map'
+        state_msg.x = self.x
+        state_msg.y = self.y
+        state_msg.z = self.z
+        state_msg.vx = self.vx
+        state_msg.vy = self.vy
+        state_msg.vz = self.vz
+        state_msg.heading = self.heading
+        state_msg.distance_to_home = distance_to_home
+        state_msg.mission_mode = self.mode
 
-        # timer
-        self.timer = self.create_timer(DT, self.step)
+        battery_msg = BatteryState()
+        battery_msg.header.stamp = stamp
+        battery_msg.header.frame_id = 'base_link'
+        battery_msg.soc = self.soc
+        battery_msg.soc_uncertainty = 0.04
+        battery_msg.estimated_remaining_energy = self.soc * 100.0
 
-    def cmd_cb(self, msg: Twist):
-        self.vel_cmd = msg
+        wind_msg = WindState()
+        wind_msg.header.stamp = stamp
+        wind_msg.header.frame_id = 'map'
+        wind_msg.speed = wind_speed
+        wind_msg.direction = wind_direction
+        wind_msg.gust_factor = gust_factor
 
-    def mode_cb(self, msg: UInt8):
-        self.mode = int(msg.data)
-
-    def step(self):
-        # ---- wind + gusts ----
-        if np.random.rand() < self.gust_prob:
-            self.wind = np.random.normal(0.0, self.wind_sigma, size=2)
-
-        # ---- kinematics ----
-        v_cmd = np.array([self.vel_cmd.linear.x, self.vel_cmd.linear.y], dtype=float)
-        p_dot = v_cmd + self.wind
-
-        self.pose.x += float(p_dot[0] * DT)
-        self.pose.y += float(p_dot[1] * DT)
-
-        # ---- battery drain ----
-        drain_rate = self.alpha * np.linalg.norm(v_cmd) + self.beta * np.linalg.norm(self.wind) + self.gamma
-        self.battery_true = max(0.0, self.battery_true - float(drain_rate * DT))
-
-        # ---- battery estimate (noisy) ----
-        noise = float(np.random.normal(0.0, self.meas_sigma))
-        self.battery_hat = float(np.clip(self.battery_true + noise, 0.0, 1.0))
-
-        # ---- publish ----
-        st = UavState()
-        st.pose = self.pose
-        st.velocity = self.vel_cmd
-        st.battery_hat = float(self.battery_hat)
-        st.battery_true = float(self.battery_true)
-        st.mode = int(self.mode)
-
-        self.state_pub.publish(st)
-
-        # ---- log ----
-        self.writer.writerow([
-            self.t,
-            self.pose.x, self.pose.y,
-            self.vel_cmd.linear.x, self.vel_cmd.linear.y,
-            float(self.wind[0]), float(self.wind[1]),
-            float(self.battery_hat), float(self.battery_true),
-            int(self.mode)
-        ])
-        self.t += DT
-
-    def destroy_node(self):
-        try:
-            self.log_f.close()
-        except Exception:
-            pass
-        super().destroy_node()
+        self.state_pub.publish(state_msg)
+        self.battery_pub.publish(battery_msg)
+        self.wind_pub.publish(wind_msg)
 
 
-def main():
-    rclpy.init()
-    node = UAVSim()
+def main(args=None):
+    rclpy.init(args=args)
+    node = UAVSimNode()
+
     try:
         rclpy.spin(node)
-    finally:
-        node.destroy_node()
-        rclpy.shutdown()
+    except KeyboardInterrupt:
+        pass
+
+    node.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()
