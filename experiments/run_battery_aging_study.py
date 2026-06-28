@@ -67,6 +67,8 @@ def summarize(results, policy_name, battery_health):
     fail = mean(r.failure for r in results)
     early = mean(r.early_rth for r in results)
     rth = mean(r.rth_triggered for r in results)
+    completion = [r.mission_completion_ratio for r in results]
+    distance = [r.distance_completed for r in results]
     battery = [r.battery_left for r in results]
     return {
         "battery_health": battery_health,
@@ -79,6 +81,8 @@ def summarize(results, policy_name, battery_health):
         "failure_ci95": ci95(fail, n),
         "early_rth_rate": early,
         "early_rth_ci95": ci95(early, n),
+        "mission_completion_rate": mean(completion),
+        "mean_distance_completed": mean(distance),
         "mean_battery_left": mean(battery),
         "std_battery_left": pstdev(battery) if n > 1 else 0.0,
     }
@@ -134,6 +138,7 @@ def main():
     write_csv(rows, args.output_dir / "battery_aging_summary.csv")
     plot_metric(rows, "failure_rate", args.output_dir / "battery_health_vs_failure.png", "Failure rate vs battery health")
     plot_metric(rows, "safe_return_rate", args.output_dir / "battery_health_vs_safe_return.png", "Safe return rate vs battery health")
+    plot_metric(rows, "mission_completion_rate", args.output_dir / "battery_health_vs_mission_completion.png", "Mission completion vs battery health")
     plot_metric(rows, "mean_battery_left", args.output_dir / "battery_health_vs_remaining_energy.png", "Remaining energy vs battery health")
     plot_metric(rows, "rth_trigger_rate", args.output_dir / "battery_health_vs_rth_trigger.png", "RTH trigger rate vs battery health")
     print(f"Wrote battery aging study to {args.output_dir}")
