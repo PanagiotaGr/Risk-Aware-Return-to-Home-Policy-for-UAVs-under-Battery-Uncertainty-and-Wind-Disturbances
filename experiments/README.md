@@ -20,7 +20,7 @@ The experiment runner compares three policies:
 
 ## Scenario Families
 
-The script evaluates several scenario families:
+The scripts evaluate several scenario families:
 
 - wind stress tests: tailwind, crosswind, and headwind at multiple wind speeds
 - battery uncertainty tests: increasing SoC noise
@@ -37,8 +37,10 @@ The following metrics are computed:
 - early RTH rate
 - mean battery remaining after decision outcome
 - standard deviation of battery remaining
+- 95% confidence intervals for ablation studies
+- runtime per trial for Monte Carlo sample-count analysis
 
-## Usage
+## Main Experiment
 
 From the repository root:
 
@@ -58,6 +60,28 @@ results/early_rth_rate.png
 results/battery_left.png
 ```
 
+## Ablation Studies
+
+Run:
+
+```bash
+python3 experiments/run_ablation_studies.py --trials 200
+```
+
+Outputs are written to `results_ablation/`:
+
+```text
+results_ablation/deterministic_threshold_sweep.csv
+results_ablation/risk_threshold_tau_sweep.csv
+results_ablation/mc_sample_sweep.csv
+results_ablation/deterministic_failure_vs_threshold.png
+results_ablation/deterministic_safe_return_vs_threshold.png
+results_ablation/risk_failure_vs_tau.png
+results_ablation/risk_safe_return_vs_tau.png
+results_ablation/failure_vs_mc_samples.png
+results_ablation/runtime_vs_mc_samples.png
+```
+
 ## Suggested Paper Table
 
 Use `results/summary_by_policy.csv` to construct the main comparison table:
@@ -68,14 +92,12 @@ Use `results/summary_by_policy.csv` to construct the main comparison table:
 | Risk-aware Monte Carlo | from CSV | from CSV | from CSV | from CSV |
 | Adaptive risk-aware Monte Carlo | from CSV | from CSV | from CSV | from CSV |
 
-## Suggested Ablations
+## Publication-Level Ablations
 
-For a publication-level evaluation, repeat the experiments while varying:
+The ablation runner tests:
 
+- deterministic SoC threshold: 0.25, 0.30, 0.35, 0.40, 0.45, 0.50
+- risk threshold tau: 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.98
 - Monte Carlo sample count: 50, 100, 250, 500, 1000
-- risk threshold: 0.75, 0.80, 0.85, 0.90, 0.95
-- SoC noise standard deviation: 0.02, 0.05, 0.10, 0.15
-- wind speed and direction
-- extra-drain fault probability
 
-These ablations can show whether the proposed policy is robust, statistically stable, and superior to deterministic triggering.
+These ablations help answer whether the proposed policy is robust, statistically stable, computationally feasible, and superior to deterministic triggering.
