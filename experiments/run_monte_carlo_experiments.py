@@ -68,6 +68,10 @@ class TrialResult:
     initial_soc_true: float
     initial_soc_estimated: float
     battery_health: float
+    available_energy: float
+    required_return_energy: float
+    energy_margin: float
+    normalized_energy_margin: float
     wind_mps: float
     wind_direction: str
     return_energy_required: float
@@ -151,13 +155,7 @@ def should_trigger_rth(policy: PolicyConfig, scenario: Scenario, estimated_soc: 
 
 
 def mission_progress(triggered: bool, failure: bool, battery_left: float) -> Tuple[float, float]:
-    """Return distance-completion fraction and normalized mission completion.
-
-    The standalone simulator does not model a full outbound trajectory. This
-    proxy captures the safety-efficiency trade-off: successful mission
-    continuation gets full completion, RTH decisions get partial completion, and
-    failures are penalized according to the remaining energy deficit.
-    """
+    """Return distance-completion fraction and normalized mission completion."""
     if triggered:
         ratio = 0.55 if battery_left >= 0.0 else 0.40
     elif failure:
@@ -177,7 +175,10 @@ def run_trial(scenario: Scenario, policy: PolicyConfig, trial: int, seed: int) -
     required = return_energy(scenario.distance_m, actual_wind, scenario.wind_direction, actual_extra)
 
     triggered, probability, threshold = should_trigger_rth(policy, scenario, estimated_soc, rng)
-    can_return = true_soc >= required
+    available_energy = true_soc
+    energy_margin = available_energy - required
+    normalized_energy_margin = energy_margin / max(required, 1e-9)
+    can_return = energy_margin >= 0.0
     safe_return = triggered and can_return
     failure = (not triggered and not can_return) or (triggered and not can_return)
     battery_left = true_soc - required if triggered else true_soc - 0.55 * required
@@ -197,6 +198,10 @@ def run_trial(scenario: Scenario, policy: PolicyConfig, trial: int, seed: int) -
         initial_soc_true=true_soc,
         initial_soc_estimated=estimated_soc,
         battery_health=scenario.battery_health,
+        available_energy=available_energy,
+        required_return_energy=required,
+        energy_margin=energy_margin,
+        normalized_energy_margin=normalized_energy_margin,
         wind_mps=actual_wind,
         wind_direction=scenario.wind_direction,
         return_energy_required=required,
@@ -308,6 +313,8 @@ def aggregate(results: Iterable[TrialResult], keys: Tuple[str, ...]) -> List[Dic
         battery_values = [item.battery_left for item in items]
         completion_values = [item.mission_completion_ratio for item in items]
         distance_values = [item.distance_completed for item in items]
+        margin_values = [item.energy_margin for item in items]
+        normalized_margin_values = [item.normalized_energy_margin for item in items]
         row: Dict[str, object] = {name: value for name, value in zip(keys, key)}
         row.update(
             trials=len(items),
@@ -317,6 +324,10 @@ def aggregate(results: Iterable[TrialResult], keys: Tuple[str, ...]) -> List[Dic
             early_rth_rate=mean(item.early_rth for item in items),
             mission_completion_rate=mean(completion_values),
             mean_distance_completed=mean(distance_values),
+            mean_energy_margin=mean(margin_values),
+            std_energy_margin=pstdev(margin_values) if len(margin_values) > 1 else 0.0,
+            mean_normalized_energy_margin=mean(normalized_margin_values),
+            negative_margin_rate=mean(item.energy_margin < 0.0 for item in items),
             mean_battery_left=mean(battery_values),
             std_battery_left=pstdev(battery_values) if len(battery_values) > 1 else 0.0,
         )
@@ -346,6 +357,8 @@ def make_plots(summary_by_policy: List[Dict[str, object]], output_dir: Path) -> 
         ("failure_rate", "Failure rate", "failure_rate.png"),
         ("early_rth_rate", "Early RTH rate", "early_rth_rate.png"),
         ("mission_completion_rate", "Mission completion ratio", "mission_completion.png"),
+        ("mean_energy_margin", "Mean energy margin", "energy_margin.png"),
+        ("negative_margin_rate", "Negative margin rate", "negative_margin_rate.png"),
         ("mean_battery_left", "Mean battery left", "battery_left.png"),
     ]:
         values = [float(row[metric]) for row in summary_by_policy]
