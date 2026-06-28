@@ -62,6 +62,9 @@ class TrialResult:
     policy: str
     trial: int
     distance_m: float
+    planned_distance: float
+    distance_completed: float
+    mission_completion_ratio: float
     initial_soc_true: float
     initial_soc_estimated: float
     battery_health: float
@@ -147,6 +150,24 @@ def should_trigger_rth(policy: PolicyConfig, scenario: Scenario, estimated_soc: 
     return probability < tau, probability, tau
 
 
+def mission_progress(triggered: bool, failure: bool, battery_left: float) -> Tuple[float, float]:
+    """Return distance-completion fraction and normalized mission completion.
+
+    The standalone simulator does not model a full outbound trajectory. This
+    proxy captures the safety-efficiency trade-off: successful mission
+    continuation gets full completion, RTH decisions get partial completion, and
+    failures are penalized according to the remaining energy deficit.
+    """
+    if triggered:
+        ratio = 0.55 if battery_left >= 0.0 else 0.40
+    elif failure:
+        ratio = max(0.0, 0.75 + battery_left)
+    else:
+        ratio = 1.0
+    ratio = max(0.0, min(1.0, ratio))
+    return ratio, ratio
+
+
 def run_trial(scenario: Scenario, policy: PolicyConfig, trial: int, seed: int) -> TrialResult:
     rng = random.Random(seed)
     true_soc = max(0.0, min(1.0, rng.gauss(scenario.initial_soc, 0.015)))
@@ -161,12 +182,18 @@ def run_trial(scenario: Scenario, policy: PolicyConfig, trial: int, seed: int) -
     failure = (not triggered and not can_return) or (triggered and not can_return)
     battery_left = true_soc - required if triggered else true_soc - 0.55 * required
     early_rth = triggered and battery_left > EARLY_RTH_MARGIN
+    completion_ratio, _ = mission_progress(triggered, failure, battery_left)
+    planned_distance = 2.0 * scenario.distance_m
+    distance_completed = planned_distance * completion_ratio
 
     return TrialResult(
         scenario=scenario.name,
         policy=policy.name,
         trial=trial,
         distance_m=scenario.distance_m,
+        planned_distance=planned_distance,
+        distance_completed=distance_completed,
+        mission_completion_ratio=completion_ratio,
         initial_soc_true=true_soc,
         initial_soc_estimated=estimated_soc,
         battery_health=scenario.battery_health,
@@ -279,6 +306,8 @@ def aggregate(results: Iterable[TrialResult], keys: Tuple[str, ...]) -> List[Dic
     rows: List[Dict[str, object]] = []
     for key, items in sorted(groups.items()):
         battery_values = [item.battery_left for item in items]
+        completion_values = [item.mission_completion_ratio for item in items]
+        distance_values = [item.distance_completed for item in items]
         row: Dict[str, object] = {name: value for name, value in zip(keys, key)}
         row.update(
             trials=len(items),
@@ -286,6 +315,8 @@ def aggregate(results: Iterable[TrialResult], keys: Tuple[str, ...]) -> List[Dic
             safe_return_rate=mean(item.safe_return for item in items),
             failure_rate=mean(item.failure for item in items),
             early_rth_rate=mean(item.early_rth for item in items),
+            mission_completion_rate=mean(completion_values),
+            mean_distance_completed=mean(distance_values),
             mean_battery_left=mean(battery_values),
             std_battery_left=pstdev(battery_values) if len(battery_values) > 1 else 0.0,
         )
@@ -314,6 +345,7 @@ def make_plots(summary_by_policy: List[Dict[str, object]], output_dir: Path) -> 
         ("safe_return_rate", "Safe return rate", "safe_return_rate.png"),
         ("failure_rate", "Failure rate", "failure_rate.png"),
         ("early_rth_rate", "Early RTH rate", "early_rth_rate.png"),
+        ("mission_completion_rate", "Mission completion ratio", "mission_completion.png"),
         ("mean_battery_left", "Mean battery left", "battery_left.png"),
     ]:
         values = [float(row[metric]) for row in summary_by_policy]
