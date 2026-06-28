@@ -2,7 +2,7 @@
 """Battery aging study for the UAV return-to-home experiments.
 
 This script studies how battery health degradation affects deterministic,
-risk-aware Monte Carlo, and adaptive risk-aware RTH policies.
+risk-aware Monte Carlo, adaptive risk-aware, and health-aware risk policies.
 
 Run from the repository root:
 
@@ -32,6 +32,7 @@ POLICIES = [
     PolicyConfig(name="deterministic_threshold", deterministic_soc_threshold=0.50),
     PolicyConfig(name="risk_aware_mc", risk_threshold=0.95, mc_samples=100),
     PolicyConfig(name="adaptive_risk_mc", risk_threshold=0.88, mc_samples=100),
+    PolicyConfig(name="health_aware_risk_mc", risk_threshold=0.95, mc_samples=100),
 ]
 
 BATTERY_HEALTH_LEVELS = [1.00, 0.95, 0.90, 0.80, 0.70]
@@ -42,19 +43,14 @@ def ci95(rate: float, n: int) -> float:
 
 
 def apply_battery_health(scenario, battery_health: float):
-    """Reduce true available energy while keeping the estimator imperfect.
-
-    In this standalone experiment, battery aging is represented as reduced
-    effective initial SoC. The SoC estimator is made mildly optimistic when the
-    battery is degraded, mimicking a realistic calibration error where the UAV
-    reports charge percentage but not full capacity loss.
-    """
+    """Reduce true available energy and expose battery health to health-aware policies."""
     degradation = 1.0 - battery_health
     return replace(
         scenario,
         name=f"{scenario.name}_health_{int(battery_health * 100)}pct",
         initial_soc=scenario.initial_soc * battery_health,
         soc_bias=scenario.soc_bias + 0.35 * degradation,
+        battery_health=battery_health,
     )
 
 
@@ -64,6 +60,10 @@ def summarize(results, policy_name, battery_health):
     fail = mean(r.failure for r in results)
     early = mean(r.early_rth for r in results)
     rth = mean(r.rth_triggered for r in results)
+    completion = [r.mission_completion_ratio for r in results]
+    distance = [r.distance_completed for r in results]
+    margin = [r.energy_margin for r in results]
+    normalized_margin = [r.normalized_energy_margin for r in results]
     battery = [r.battery_left for r in results]
     return {
         "battery_health": battery_health,
@@ -76,6 +76,12 @@ def summarize(results, policy_name, battery_health):
         "failure_ci95": ci95(fail, n),
         "early_rth_rate": early,
         "early_rth_ci95": ci95(early, n),
+        "mission_completion_rate": mean(completion),
+        "mean_distance_completed": mean(distance),
+        "mean_energy_margin": mean(margin),
+        "std_energy_margin": pstdev(margin) if n > 1 else 0.0,
+        "mean_normalized_energy_margin": mean(normalized_margin),
+        "negative_margin_rate": mean(value < 0.0 for value in margin),
         "mean_battery_left": mean(battery),
         "std_battery_left": pstdev(battery) if n > 1 else 0.0,
     }
@@ -131,7 +137,11 @@ def main():
     write_csv(rows, args.output_dir / "battery_aging_summary.csv")
     plot_metric(rows, "failure_rate", args.output_dir / "battery_health_vs_failure.png", "Failure rate vs battery health")
     plot_metric(rows, "safe_return_rate", args.output_dir / "battery_health_vs_safe_return.png", "Safe return rate vs battery health")
+    plot_metric(rows, "mission_completion_rate", args.output_dir / "battery_health_vs_mission_completion.png", "Mission completion vs battery health")
+    plot_metric(rows, "mean_energy_margin", args.output_dir / "battery_health_vs_energy_margin.png", "Energy margin vs battery health")
+    plot_metric(rows, "negative_margin_rate", args.output_dir / "battery_health_vs_negative_margin_rate.png", "Negative margin rate vs battery health")
     plot_metric(rows, "mean_battery_left", args.output_dir / "battery_health_vs_remaining_energy.png", "Remaining energy vs battery health")
+    plot_metric(rows, "rth_trigger_rate", args.output_dir / "battery_health_vs_rth_trigger.png", "RTH trigger rate vs battery health")
     print(f"Wrote battery aging study to {args.output_dir}")
 
 
