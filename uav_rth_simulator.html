@@ -6,14 +6,14 @@
 <title>UAV Risk-Aware RTH — Live Demo</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-:root{--bg:#070b14;--panel:#0d1424;--panel2:#111b2f;--line:#20304f;--text:#eaf1ff;--muted:#8ea0bf;--blue:#42a5ff;--cyan:#22d3ee;--green:#3ddc97;--yellow:#fbbf24;--red:#ff5c7a;--purple:#a78bfa}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top left,#102747 0,#070b14 42%,#05070d 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}.app{max-width:1440px;margin:auto;padding:22px}.top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}.brand h1{font-size:30px;line-height:1.05;margin:0 0 8px;font-weight:850;letter-spacing:-.04em}.brand p{margin:0;color:var(--muted);font-size:14px}.badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.badge{padding:7px 10px;border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:999px;color:#c7d7f3;font-size:12px}.status{min-width:285px;background:linear-gradient(135deg,rgba(66,165,255,.16),rgba(34,211,238,.06));border:1px solid rgba(66,165,255,.32);border-radius:20px;padding:16px;box-shadow:0 20px 70px rgba(0,0,0,.25)}.status small{color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-weight:800}.status strong{display:block;font-size:24px;margin-top:4px}.grid{display:grid;grid-template-columns:360px 1fr 360px;gap:16px}.panel{background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.025));border:1px solid rgba(148,163,184,.18);border-radius:22px;padding:16px;box-shadow:0 24px 90px rgba(0,0,0,.22);backdrop-filter:blur(10px)}.panel-title{font-size:12px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-weight:850;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}.scenario-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}.scenario-btn,button{border:1px solid rgba(148,163,184,.25);background:#101a2d;color:var(--text);border-radius:13px;padding:10px 12px;font-weight:750;cursor:pointer;transition:.2s;font-family:inherit}.scenario-btn:hover,button:hover{transform:translateY(-1px);border-color:rgba(66,165,255,.7);box-shadow:0 8px 24px rgba(66,165,255,.14)}button.primary{background:linear-gradient(135deg,#1976ff,#22d3ee);border:0;color:white}.controls{display:grid;gap:12px}.ctrl label{display:flex;justify-content:space-between;color:#c8d4ef;font-size:13px;margin-bottom:6px}.ctrl b{color:white}.ctrl input{width:100%;accent-color:var(--cyan)}.hint{font-size:12px;color:var(--muted);line-height:1.45;margin-top:10px}.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}.metric{background:rgba(255,255,255,.055);border:1px solid rgba(148,163,184,.14);border-radius:18px;padding:13px}.metric .label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.09em;font-weight:850;margin-bottom:5px}.metric .value{font-size:25px;font-weight:900;letter-spacing:-.04em}.value.good{color:var(--green)}.value.warn{color:var(--yellow)}.value.bad{color:var(--red)}.hud{position:relative;height:430px;overflow:hidden;border-radius:22px;background:radial-gradient(circle at center,rgba(34,211,238,.08),rgba(0,0,0,.12)),linear-gradient(135deg,#07101e,#0d172b);border:1px solid rgba(66,165,255,.2)}canvas#mapCanvas{width:100%;height:100%;display:block}.hud-overlay{position:absolute;left:16px;top:16px;right:16px;display:flex;justify-content:space-between;pointer-events:none}.pill{background:rgba(7,11,20,.68);border:1px solid rgba(148,163,184,.22);border-radius:999px;padding:8px 11px;font-size:12px;color:#dbeafe;backdrop-filter:blur(10px)}.risk-wrap{height:16px;background:#17233a;border-radius:999px;overflow:hidden;border:1px solid rgba(148,163,184,.17)}.risk-fill{height:100%;width:100%;background:linear-gradient(90deg,var(--green),var(--cyan));transition:.25s}.btns{display:flex;gap:10px;margin:14px 0}.chartbox{height:230px}.chartbox.small{height:170px}.log{height:210px;overflow:auto;background:#050914;border:1px solid rgba(148,163,184,.14);border-radius:16px;padding:10px;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:#a8b7d5}.log div{padding:2px 0}.log .info{color:#6dbdff}.log .ok{color:#6ee7b7}.log .warn{color:#fbbf24}.log .bad{color:#fb7185}.table{width:100%;border-collapse:collapse;font-size:13px}.table td{padding:8px 0;border-bottom:1px solid rgba(148,163,184,.12);color:#b9c7df}.table td:last-child{text-align:right;color:white;font-weight:850}.mode{display:inline-flex;gap:6px;align-items:center;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:900}.mode.mission{background:rgba(66,165,255,.15);color:#8fd0ff}.mode.rth{background:rgba(255,92,122,.15);color:#ff8ea4}.mode.landed{background:rgba(61,220,151,.15);color:#8ff5c7}.mode.failed{background:rgba(251,191,36,.16);color:#ffd166}.pulse{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 14px currentColor}@media(max-width:1180px){.grid{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}.top{flex-direction:column}.status{width:100%}}@media(max-width:640px){.app{padding:12px}.brand h1{font-size:24px}.metrics{grid-template-columns:1fr}.scenario-row{grid-template-columns:1fr}}
+:root{--bg:#070b14;--panel:#0d1424;--line:#20304f;--text:#eaf1ff;--muted:#8ea0bf;--blue:#42a5ff;--cyan:#22d3ee;--green:#3ddc97;--yellow:#fbbf24;--red:#ff5c7a;--purple:#a78bfa}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top left,#102747 0,#070b14 42%,#05070d 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}.app{max-width:1440px;margin:auto;padding:22px}.top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}.brand h1{font-size:30px;line-height:1.05;margin:0 0 8px;font-weight:850;letter-spacing:-.04em}.brand p{margin:0;color:var(--muted);font-size:14px}.badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.badge{padding:7px 10px;border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:999px;color:#c7d7f3;font-size:12px}.status{min-width:285px;background:linear-gradient(135deg,rgba(66,165,255,.16),rgba(34,211,238,.06));border:1px solid rgba(66,165,255,.32);border-radius:20px;padding:16px;box-shadow:0 20px 70px rgba(0,0,0,.25)}.status small{color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-weight:800}.status strong{display:block;font-size:24px;margin-top:4px}.grid{display:grid;grid-template-columns:360px 1fr 360px;gap:16px}.panel{background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.025));border:1px solid rgba(148,163,184,.18);border-radius:22px;padding:16px;box-shadow:0 24px 90px rgba(0,0,0,.22);backdrop-filter:blur(10px)}.panel-title{font-size:12px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-weight:850;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}.scenario-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}.scenario-btn,button{border:1px solid rgba(148,163,184,.25);background:#101a2d;color:var(--text);border-radius:13px;padding:10px 12px;font-weight:750;cursor:pointer;transition:.2s;font-family:inherit}.scenario-btn:hover,button:hover{transform:translateY(-1px);border-color:rgba(66,165,255,.7);box-shadow:0 8px 24px rgba(66,165,255,.14)}button.primary{background:linear-gradient(135deg,#1976ff,#22d3ee);border:0;color:white}.controls{display:grid;gap:12px}.ctrl label{display:flex;justify-content:space-between;color:#c8d4ef;font-size:13px;margin-bottom:6px}.ctrl b{color:white}.ctrl input{width:100%;accent-color:var(--cyan)}.hint{font-size:12px;color:var(--muted);line-height:1.45;margin-top:10px}.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}.metric{background:rgba(255,255,255,.055);border:1px solid rgba(148,163,184,.14);border-radius:18px;padding:13px}.metric .label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.09em;font-weight:850;margin-bottom:5px}.metric .value{font-size:25px;font-weight:900;letter-spacing:-.04em}.value.good{color:var(--green)}.value.warn{color:var(--yellow)}.value.bad{color:var(--red)}.hud{position:relative;height:430px;overflow:hidden;border-radius:22px;background:radial-gradient(circle at center,rgba(34,211,238,.08),rgba(0,0,0,.12)),linear-gradient(135deg,#07101e,#0d172b);border:1px solid rgba(66,165,255,.2)}canvas#mapCanvas{width:100%;height:100%;display:block}.hud-overlay{position:absolute;left:16px;top:16px;right:16px;display:flex;justify-content:space-between;pointer-events:none}.pill{background:rgba(7,11,20,.68);border:1px solid rgba(148,163,184,.22);border-radius:999px;padding:8px 11px;font-size:12px;color:#dbeafe;backdrop-filter:blur(10px)}.risk-wrap{height:16px;background:#17233a;border-radius:999px;overflow:hidden;border:1px solid rgba(148,163,184,.17)}.risk-fill{height:100%;width:100%;background:linear-gradient(90deg,var(--green),var(--cyan));transition:.25s}.btns{display:flex;gap:10px;margin:14px 0}.chartbox{height:230px}.chartbox.small{height:170px}.log{height:210px;overflow:auto;background:#050914;border:1px solid rgba(148,163,184,.14);border-radius:16px;padding:10px;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:#a8b7d5}.log div{padding:2px 0}.log .info{color:#6dbdff}.log .ok{color:#6ee7b7}.log .warn{color:#fbbf24}.log .bad{color:#fb7185}.table{width:100%;border-collapse:collapse;font-size:13px}.table td{padding:8px 0;border-bottom:1px solid rgba(148,163,184,.12);color:#b9c7df}.table td:last-child{text-align:right;color:white;font-weight:850}.mode{display:inline-flex;gap:6px;align-items:center;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:900}.mode.mission{background:rgba(66,165,255,.15);color:#8fd0ff}.mode.rth{background:rgba(255,92,122,.15);color:#ff8ea4}.mode.landed{background:rgba(61,220,151,.15);color:#8ff5c7}.mode.failed{background:rgba(251,191,36,.16);color:#ffd166}.pulse{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 14px currentColor}@media(max-width:1180px){.grid{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}.top{flex-direction:column}.status{width:100%}}@media(max-width:640px){.app{padding:12px}.brand h1{font-size:24px}.metrics{grid-template-columns:1fr}.scenario-row{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="app">
   <section class="top">
     <div class="brand">
-      <h1>UAV Risk-Aware Return-to-Home<br/>Control Dashboard</h1>
+      <h1>UAV Risk-Aware Return-to-Home<br>Control Dashboard</h1>
       <p>Premium live demo with realistic quadcopter energy model, battery health, wind gusts and Monte Carlo return-risk estimation.</p>
       <div class="badge-row"><span class="badge">Monte Carlo RTH</span><span class="badge">Battery Health</span><span class="badge">Dynamic Wind</span><span class="badge">Energy Margin</span><span class="badge">Research Demo</span></div>
     </div>
@@ -56,10 +56,10 @@
 
     <main class="panel">
       <div class="panel-title"><span>Live flight map</span><span id="windHud">wind 4.0 m/s</span></div>
-      <div class="hud"><canvas id="mapCanvas"></canvas><div class="hud-overlay"><span class="pill" id="homeHud">HOME LOCKED</span><span class="pill" id="riskHud">τ = 0.76</span></div></div>
+      <div class="hud"><canvas id="mapCanvas"></canvas><div class="hud-overlay"><span class="pill">HOME LOCKED</span><span class="pill" id="riskHud">τ = 0.76</span></div></div>
       <div class="btns"><button class="primary" id="btn-start" onclick="startSim()">▶ Start Simulation</button><button id="btn-pause" onclick="pauseSim()" disabled>⏸ Pause</button><button onclick="resetSim()">↺ Reset</button></div>
       <div class="panel-title">Return feasibility</div><div class="risk-wrap"><div class="risk-fill" id="riskFill"></div></div>
-      <p class="hint">The vertical decision threshold is represented by τ. When P(safe return) drops below τ, the UAV switches to RTH.</p>
+      <p class="hint">When P(safe return) drops below τ, the UAV switches to RTH.</p>
       <div class="chartbox"><canvas id="histChart"></canvas></div>
     </main>
 
@@ -71,10 +71,330 @@
     </aside>
   </section>
 </div>
+
 <script>
-const S={running:false,paused:false,t:0,dt:.2,mode:'MISSION',pos:{x:0,y:0},goal:{x:0,y:0},home:{x:0,y:0},heading:0,soc:1,soc_est:1,wind_v:4,wind_dir:0,p_safe:1,marginWh:0,gust:false,fault:false,path:[],metrics:{runs:0,success:0,safe_ret:0,fail:0,rth_times:[]},scenario:'calm',rth_t:-1,interval:null};
-const $=id=>document.getElementById(id),gp=id=>parseFloat($(id).value);function randn(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}function P(){return{m:gp('mass'),cap:gp('batt'),h:gp('health'),v:gp('cruise'),reserve:.18*gp('batt')*gp('health')}}function avail(soc){let p=P();return Math.max(0,soc)*p.cap*p.h}function power(m,v,head){return 105*m*(1+.012*Math.max(0,v-6)**2)*(1+.055*Math.max(0,head)**1.35)}function retWh(dist,head){let p=P(),gs=Math.max(2.5,p.v-Math.max(0,head)*.35);return power(p.m,p.v,head)*(dist/gs/3600)+p.reserve}function mcProb(){let n=parseInt(gp('mc-n')),sig=gp('soc-unc'),wu=gp('wind-unc'),dist=Math.hypot(S.pos.x-S.home.x,S.pos.y-S.home.y);if(dist<6)return 1;let ang=Math.atan2(S.home.y-S.pos.y,S.home.x-S.pos.x),safe=0;for(let i=0;i<n;i++){let ss=Math.max(.01,Math.min(1,S.soc_est+randn()*sig));let ww=Math.max(0,S.wind_v+randn()*wu);let wh=ww*Math.cos(S.wind_dir-ang);if(avail(ss)-retWh(dist,wh)>0)safe++}return safe/n}
-let hist=null,mc=null,canvas=$('mapCanvas'),ctx=canvas.getContext('2d'),W=0,H=0;function initCharts(){if(hist)hist.destroy();if(mc)mc.destroy();Chart.defaults.color='#8ea0bf';Chart.defaults.borderColor='rgba(148,163,184,.15)';hist=new Chart($('histChart'),{type:'line',data:{labels:[],datasets:[{label:'P(safe)',data:[],borderColor:'#22d3ee',backgroundColor:'rgba(34,211,238,.10)',fill:true,tension:.35,pointRadius:0,borderWidth:2},{label:'SoC estimate',data:[],borderColor:'#3ddc97',tension:.35,pointRadius:0,borderDash:[5,4],borderWidth:2},{label:'Energy margin / capacity',data:[],borderColor:'#fbbf24',tension:.35,pointRadius:0,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{labels:{boxWidth:12}}},scales:{y:{min:-.5,max:1.05},x:{ticks:{maxTicksLimit:8}}}}});mc=new Chart($('mcChart'),{type:'bar',data:{labels:[...Array(21)].map((_,i)=>i*5),datasets:[{data:Array(21).fill(0),backgroundColor:'rgba(66,165,255,.55)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'Wh'}},y:{ticks:{maxTicksLimit:4}}}}})}function resize(){let r=canvas.getBoundingClientRect(),d=devicePixelRatio||1;W=r.width;H=r.height;canvas.width=W*d;canvas.height=H*d;ctx.setTransform(d,0,0,d,0,0)}function s(x,y){return{x:W/2+x*.78,y:H/2-y*.78}}function draw(){ctx.clearRect(0,0,W,H);let grd=ctx.createRadialGradient(W/2,H/2,20,W/2,H/2,W*.7);grd.addColorStop(0,'#13223c');grd.addColorStop(1,'#07101e');ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);ctx.strokeStyle='rgba(66,165,255,.08)';ctx.lineWidth=1;for(let g=-500;g<=500;g+=50){let a=s(g,-500),b=s(g,500);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();a=s(-500,g);b=s(500,g);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}let home=s(S.home.x,S.home.y),goal=s(S.goal.x,S.goal.y);ctx.setLineDash([6,7]);ctx.strokeStyle='rgba(61,220,151,.45)';ctx.beginPath();ctx.moveTo(home.x,home.y);ctx.lineTo(goal.x,goal.y);ctx.stroke();ctx.setLineDash([]);if(S.path.length>1){ctx.strokeStyle=S.mode==='RTH'?'#ff5c7a':'#42a5ff';ctx.lineWidth=3;ctx.shadowBlur=16;ctx.shadowColor=ctx.strokeStyle;ctx.beginPath();let p=s(S.path[0].x,S.path[0].y);ctx.moveTo(p.x,p.y);for(let i=1;i<S.path.length;i++){p=s(S.path[i].x,S.path[i].y);ctx.lineTo(p.x,p.y)}ctx.stroke();ctx.shadowBlur=0}ctx.fillStyle='#3ddc97';ctx.beginPath();ctx.arc(home.x,home.y,9,0,7);ctx.fill();ctx.fillStyle='#070b14';ctx.font='bold 11px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('H',home.x,home.y);ctx.fillStyle='#a78bfa';ctx.beginPath();ctx.arc(goal.x,goal.y,9,0,7);ctx.fill();ctx.fillStyle='white';ctx.fillText('G',goal.x,goal.y);let u=s(S.pos.x,S.pos.y);ctx.save();ctx.translate(u.x,u.y);ctx.rotate(-S.heading);ctx.shadowBlur=20;ctx.shadowColor=S.mode==='RTH'?'#ff5c7a':'#22d3ee';ctx.fillStyle=S.mode==='FAILED'?'#fbbf24':S.mode==='LANDED'?'#3ddc97':S.mode==='RTH'?'#ff5c7a':'#22d3ee';ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(-11,10);ctx.lineTo(0,4);ctx.lineTo(11,10);ctx.closePath();ctx.fill();ctx.restore();let we=s(-210,-190),w2=s(-210+S.wind_v*Math.cos(S.wind_dir)*9,-190+S.wind_v*Math.sin(S.wind_dir)*9);ctx.strokeStyle='#fbbf24';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(we.x,we.y);ctx.lineTo(w2.x,w2.y);ctx.stroke();ctx.fillStyle='#fbbf24';ctx.font='12px system-ui';ctx.fillText('wind',we.x+22,we.y-6);if(S.gust){ctx.fillStyle='rgba(251,191,36,.10)';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fbbf24';ctx.textAlign='left';ctx.font='bold 14px system-ui';ctx.fillText('DYNAMIC GUST FRONT',18,28)}if(S.fault){ctx.fillStyle='rgba(255,92,122,.10)';ctx.fillRect(0,0,W,H);ctx.fillStyle='#ff5c7a';ctx.textAlign='left';ctx.font='bold 14px system-ui';ctx.fillText('EXTRA DRAIN FAULT',18,52)}}function log(m,c=''){let d=document.createElement('div');d.className=c;d.textContent=`[${S.t.toFixed(1)}s] ${m}`;$('logBox').appendChild(d);$('logBox').scrollTop=$('logBox').scrollHeight;while($('logBox').children.length>180)$('logBox').removeChild($('logBox').firstChild)}function updSliders(){[['tau','',2],['mass',' kg',2],['batt',' Wh',0],['cruise',' m/s',1],['wind',' m/s',1],['wind-unc','',1],['mc-n','',0]].forEach(([id,suf,dec])=>$(id+'-val').textContent=gp(id).toFixed(dec)+suf);$('health-val').textContent=(gp('health')*100).toFixed(0)+'%';$('soc-unc-val').textContent=gp('soc-unc').toFixed(2);$('riskHud').textContent='τ = '+gp('tau').toFixed(2)}['tau','mass','batt','health','cruise','soc-unc','wind','wind-unc','mc-n'].forEach(id=>$(id).addEventListener('input',()=>{updSliders();if(!S.running)resetSim()}));function loadScenario(n){S.scenario=n;let set=(o)=>Object.entries(o).forEach(([k,v])=>$(k).value=v);if(n==='calm')set({mass:1.15,batt:77,health:.98,cruise:9,wind:1.5,'soc-unc':.03,'wind-unc':.5,tau:.64});if(n==='headwind')set({mass:1.25,batt:77,health:.95,cruise:9,wind:6,'soc-unc':.04,'wind-unc':1.8,tau:.78});if(n==='gusts')set({mass:1.25,batt:77,health:.92,cruise:8.5,wind:5,'soc-unc':.05,'wind-unc':3,tau:.84});if(n==='aged')set({mass:1.25,batt:77,health:.78,cruise:8.5,wind:4,'soc-unc':.07,'wind-unc':1.5,tau:.90});if(n==='payload')set({mass:2.1,batt:110,health:.90,cruise:7.5,wind:5.5,'soc-unc':.06,'wind-unc':2.2,tau:.88});if(n==='fault')set({mass:1.35,batt:77,health:.88,cruise:8,wind:4,'soc-unc':.06,'wind-unc':1.5,tau:.82});updSliders();resetSim();log('Scenario loaded: '+n,'info')}function resetSim(){clearInterval(S.interval);Object.assign(S,{running:false,paused:false,t:0,mode:'MISSION',soc:1,soc_est:1,wind_v:gp('wind'),wind_dir:Math.random()*6.283,p_safe:1,marginWh:0,gust:false,fault:false,path:[],rth_t:-1});let r=190;S.home={x:-r/2,y:-r/2};S.goal={x:r/2+(Math.random()*70-35),y:r/2+(Math.random()*70-35)};S.pos={...S.home};S.path=[{...S.pos}];$('btn-start').disabled=false;$('btn-pause').disabled=true;$('btn-pause').textContent='⏸ Pause';$('logBox').innerHTML='';initCharts();ui();draw();let p=P();log(`/uav/drone mass=${p.m.toFixed(2)}kg capacity=${p.cap}Wh health=${(p.h*100).toFixed(0)}%`,'info');log(`/uav/battery usable=${avail(1).toFixed(1)}Wh reserve=${p.reserve.toFixed(1)}Wh`,'info');log(`/uav/wind v=${S.wind_v.toFixed(1)}m/s dir=${(S.wind_dir*180/Math.PI).toFixed(0)}°`,'info')}function ui(){let soc=100*S.soc_est;$('socVal').textContent=soc.toFixed(1)+'%';$('socVal').className='value '+(soc<22?'bad':soc<42?'warn':'good');$('probVal').textContent=S.p_safe.toFixed(3);$('probVal').className='value '+(S.p_safe<gp('tau')?'bad':S.p_safe<gp('tau')+.1?'warn':'good');$('marginVal').textContent=S.marginWh.toFixed(1)+' Wh';$('marginVal').className='value '+(S.marginWh<0?'bad':S.marginWh<8?'warn':'good');$('distVal').textContent=Math.hypot(S.pos.x-S.home.x,S.pos.y-S.home.y).toFixed(0)+' m';$('modeCard').innerHTML=`<span class="mode ${S.mode.toLowerCase()}"><span class="pulse"></span>${S.mode}</span>`;$('riskFill').style.width=(S.p_safe*100).toFixed(1)+'%';$('riskFill').style.background=S.p_safe<gp('tau')?'linear-gradient(90deg,#ff5c7a,#fbbf24)':'linear-gradient(90deg,#3ddc97,#22d3ee)';$('decisionText').textContent=S.p_safe<gp('tau')?'Trigger Return-to-Home':'Continue Mission';$('decisionSub').textContent=`P(safe)=${S.p_safe.toFixed(3)}, τ=${gp('tau').toFixed(2)}, margin=${S.marginWh.toFixed(1)}Wh`;$('windHud').textContent=`wind ${S.wind_v.toFixed(1)} m/s`;let m=S.metrics;$('m-runs').textContent=m.runs;if(m.runs){$('m-success').textContent=((m.success/m.runs)*100).toFixed(0)+'%';$('m-safe').textContent=((m.safe_ret/m.runs)*100).toFixed(0)+'%';$('m-fail').textContent=((m.fail/m.runs)*100).toFixed(0)+'%';$('m-rth-t').textContent=m.rth_times.length?(m.rth_times.reduce((a,b)=>a+b)/m.rth_times.length).toFixed(1)+'s':'N/A'}}function finish(o){S.running=false;clearInterval(S.interval);S.metrics.runs++;if(o==='success'){S.metrics.success++;S.metrics.safe_ret++}else if(o==='rth_safe')S.metrics.safe_ret++;else S.metrics.fail++;$('btn-start').disabled=false;$('btn-pause').disabled=true;ui();draw()}function tick(){if(!S.running||S.paused)return;S.t+=S.dt;if(S.scenario==='headwind')S.wind_v=Math.min(13,gp('wind')+S.t*.045);S.gust=S.scenario==='gusts'&&Math.floor(S.t/7)%2===1;S.fault=S.scenario==='fault'&&S.t>25&&S.t<38;if(S.gust)S.wind_v=Math.max(0,gp('wind')+4+randn()*2.3);else if(S.scenario!=='headwind')S.wind_v=Math.max(0,gp('wind')+randn()*.35);S.wind_dir+=randn()*.018;let sig=gp('soc-unc'),bias=(S.scenario==='aged'||S.scenario==='fault')?.04:0;S.soc_est=Math.max(0,Math.min(1,S.soc+bias+randn()*sig*.28));S.p_safe=mcProb();let dh=Math.hypot(S.pos.x-S.home.x,S.pos.y-S.home.y),ah=Math.atan2(S.home.y-S.pos.y,S.home.x-S.pos.x),wh=S.wind_v*Math.cos(S.wind_dir-ah),req=retWh(dh,wh);S.marginWh=avail(S.soc)-req;if(S.mode==='MISSION'){let dx=S.goal.x-S.pos.x,dy=S.goal.y-S.pos.y,dg=Math.hypot(dx,dy);if(dg<9){S.mode='LANDED';log('/uav/mode → LANDED goal reached','ok');finish('success');return}S.heading=Math.atan2(dy,dx);stepToward(S.goal);if(S.p_safe<gp('tau')){S.mode='RTH';S.rth_t=S.t;S.metrics.rth_times.push(S.t);log(`/uav/rth_trigger TRUE P=${S.p_safe.toFixed(3)} margin=${S.marginWh.toFixed(1)}Wh`,'bad')}}else if(S.mode==='RTH'){let dh2=Math.hypot(S.pos.x-S.home.x,S.pos.y-S.home.y);if(dh2<9){S.mode='LANDED';log('/uav/mode → LANDED returned safely','ok');finish('rth_safe');return}S.heading=Math.atan2(S.home.y-S.pos.y,S.home.x-S.pos.x);stepToward(S.home)}if(avail(S.soc)<=1){S.mode='FAILED';log('BATTERY DEPLETED','bad');finish('fail');return}S.path.push({...S.pos});if(S.path.length>700)S.path.shift();let k=Math.round(S.t/S.dt);if(k%5===0){log(`/uav/state x=${S.pos.x.toFixed(1)} y=${S.pos.y.toFixed(1)} mode=${S.mode}`);log(`/uav/risk_return P=${S.p_safe.toFixed(3)} margin=${S.marginWh.toFixed(1)}Wh`,S.p_safe<gp('tau')?'bad':'info')}if(hist&&k%3===0){hist.data.labels.push(S.t.toFixed(1));hist.data.datasets[0].data.push(+S.p_safe.toFixed(3));hist.data.datasets[1].data.push(+S.soc_est.toFixed(3));hist.data.datasets[2].data.push(Math.max(-.5,Math.min(1,S.marginWh/gp('batt'))));if(hist.data.labels.length>240){hist.data.labels.shift();hist.data.datasets.forEach(d=>d.data.shift())}hist.update()}if(mc&&k%20===0){let bins=Array(21).fill(0),dist=Math.hypot(S.pos.x-S.home.x,S.pos.y-S.home.y),ang=Math.atan2(S.home.y-S.pos.y,S.home.x-S.pos.x);for(let i=0;i<350;i++){let ww=Math.max(0,S.wind_v+randn()*gp('wind-unc')),cost=retWh(dist,ww*Math.cos(S.wind_dir-ang));bins[Math.min(20,Math.floor(cost/5))]++}mc.data.datasets[0].data=bins;mc.update()}ui();draw()}function stepToward(target){let head=S.wind_v*Math.cos(S.wind_dir-S.heading),spd=Math.max(2.5,gp('cruise')-Math.max(0,head)*.35);S.pos.x+=Math.cos(S.heading)*spd*S.dt;S.pos.y+=Math.sin(S.heading)*spd*S.dt;let dWh=power(gp('mass'),gp('cruise'),head)*(S.dt/3600)*(S.fault?2.6:1);S.soc=Math.max(0,S.soc-dWh/(gp('batt')*gp('health')))}function startSim(){if(S.mode==='LANDED'||S.mode==='FAILED')resetSim();S.running=true;S.paused=false;$('btn-start').disabled=true;$('btn-pause').disabled=false;log('Simulation started','info');S.interval=setInterval(tick,50)}function pauseSim(){S.paused=!S.paused;$('btn-pause').textContent=S.paused?'▶ Resume':'⏸ Pause';log(S.paused?'Paused':'Resumed','info')}updSliders();addEventListener('resize',()=>{resize();draw()});setTimeout(()=>{resize();resetSim()},120);
+'use strict';
+
+const S = {
+  running: false,
+  paused: false,
+  t: 0,
+  dt: 0.2,
+  mode: 'MISSION',
+  pos: { x: 0, y: 0 },
+  goal: { x: 0, y: 0 },
+  home: { x: 0, y: 0 },
+  heading: 0,
+  soc: 1,
+  soc_est: 1,
+  wind_v: 4,
+  wind_dir: 0,
+  p_safe: 1,
+  marginWh: 0,
+  gust: false,
+  fault: false,
+  path: [],
+  metrics: { runs: 0, success: 0, safe_ret: 0, fail: 0, rth_times: [] },
+  scenario: 'calm',
+  rth_t: -1,
+  interval: null
+};
+
+function el(id) { return document.getElementById(id); }
+function gp(id) { return parseFloat(el(id).value); }
+function randn() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+function droneParams() {
+  const cap = gp('batt');
+  const health = gp('health');
+  return { mass: gp('mass'), cap, health, cruise: gp('cruise'), reserve: 0.18 * cap * health };
+}
+function availableWh(soc) {
+  const p = droneParams();
+  return Math.max(0, soc) * p.cap * p.health;
+}
+function powerW(mass, cruise, headwind) {
+  const hover = 105 * mass;
+  const speedPenalty = 1 + 0.012 * Math.max(0, cruise - 6) ** 2;
+  const windPenalty = 1 + 0.055 * Math.max(0, headwind) ** 1.35;
+  return hover * speedPenalty * windPenalty;
+}
+function returnEnergyWh(distance, headwind) {
+  const p = droneParams();
+  const groundSpeed = Math.max(2.5, p.cruise - Math.max(0, headwind) * 0.35);
+  const timeHours = (distance / groundSpeed) / 3600;
+  return powerW(p.mass, p.cruise, headwind) * timeHours + p.reserve;
+}
+function mcSafeProbability() {
+  const n = parseInt(gp('mc-n'), 10);
+  const sig = gp('soc-unc');
+  const windUnc = gp('wind-unc');
+  const dist = Math.hypot(S.pos.x - S.home.x, S.pos.y - S.home.y);
+  if (dist < 6) return 1;
+  const angleHome = Math.atan2(S.home.y - S.pos.y, S.home.x - S.pos.x);
+  let safe = 0;
+  for (let i = 0; i < n; i++) {
+    const socSample = Math.max(0.01, Math.min(1, S.soc_est + randn() * sig));
+    const windSample = Math.max(0, S.wind_v + randn() * windUnc);
+    const headwind = windSample * Math.cos(S.wind_dir - angleHome);
+    if (availableWh(socSample) - returnEnergyWh(dist, headwind) > 0) safe++;
+  }
+  return safe / n;
+}
+
+let histChart = null, mcChart = null;
+const canvas = el('mapCanvas');
+const ctx = canvas.getContext('2d');
+let W = 0, H = 0;
+
+function initCharts() {
+  if (histChart) histChart.destroy();
+  if (mcChart) mcChart.destroy();
+  Chart.defaults.color = '#8ea0bf';
+  Chart.defaults.borderColor = 'rgba(148,163,184,.15)';
+  histChart = new Chart(el('histChart'), {
+    type: 'line',
+    data: { labels: [], datasets: [
+      { label: 'P(safe)', data: [], borderColor: '#22d3ee', backgroundColor: 'rgba(34,211,238,.10)', fill: true, tension: .35, pointRadius: 0, borderWidth: 2 },
+      { label: 'SoC estimate', data: [], borderColor: '#3ddc97', tension: .35, pointRadius: 0, borderDash: [5,4], borderWidth: 2 },
+      { label: 'Energy margin / capacity', data: [], borderColor: '#fbbf24', tension: .35, pointRadius: 0, borderWidth: 2 }
+    ] },
+    options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { labels: { boxWidth: 12 } } }, scales: { y: { min: -0.5, max: 1.05 }, x: { ticks: { maxTicksLimit: 8 } } } }
+  });
+  mcChart = new Chart(el('mcChart'), {
+    type: 'bar',
+    data: { labels: Array.from({ length: 21 }, (_, i) => String(i * 5)), datasets: [{ data: Array(21).fill(0), backgroundColor: 'rgba(66,165,255,.55)', borderRadius: 4 }] },
+    options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false } }, scales: { x: { title: { display: true, text: 'Wh' } }, y: { ticks: { maxTicksLimit: 4 } } } }
+  });
+}
+function resize() {
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  W = rect.width;
+  H = rect.height;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+function worldToScreen(x, y) { return { x: W / 2 + x * 0.78, y: H / 2 - y * 0.78 }; }
+function drawMap() {
+  ctx.clearRect(0, 0, W, H);
+  const grd = ctx.createRadialGradient(W/2, H/2, 20, W/2, H/2, W*.7);
+  grd.addColorStop(0, '#13223c');
+  grd.addColorStop(1, '#07101e');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(66,165,255,.08)';
+  ctx.lineWidth = 1;
+  for (let g = -500; g <= 500; g += 50) {
+    let a = worldToScreen(g, -500), b = worldToScreen(g, 500);
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    a = worldToScreen(-500, g); b = worldToScreen(500, g);
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+  }
+  const home = worldToScreen(S.home.x, S.home.y);
+  const goal = worldToScreen(S.goal.x, S.goal.y);
+  ctx.setLineDash([6,7]);
+  ctx.strokeStyle = 'rgba(61,220,151,.45)';
+  ctx.beginPath(); ctx.moveTo(home.x, home.y); ctx.lineTo(goal.x, goal.y); ctx.stroke();
+  ctx.setLineDash([]);
+  if (S.path.length > 1) {
+    ctx.strokeStyle = S.mode === 'RTH' ? '#ff5c7a' : '#42a5ff';
+    ctx.lineWidth = 3;
+    ctx.shadowBlur = 16;
+    ctx.shadowColor = ctx.strokeStyle;
+    ctx.beginPath();
+    let p = worldToScreen(S.path[0].x, S.path[0].y);
+    ctx.moveTo(p.x, p.y);
+    for (let i = 1; i < S.path.length; i++) { p = worldToScreen(S.path[i].x, S.path[i].y); ctx.lineTo(p.x, p.y); }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+  ctx.fillStyle = '#3ddc97'; ctx.beginPath(); ctx.arc(home.x, home.y, 9, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#070b14'; ctx.font = 'bold 11px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('H', home.x, home.y);
+  ctx.fillStyle = '#a78bfa'; ctx.beginPath(); ctx.arc(goal.x, goal.y, 9, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = 'white'; ctx.fillText('G', goal.x, goal.y);
+  const u = worldToScreen(S.pos.x, S.pos.y);
+  ctx.save(); ctx.translate(u.x, u.y); ctx.rotate(-S.heading); ctx.shadowBlur = 20; ctx.shadowColor = S.mode === 'RTH' ? '#ff5c7a' : '#22d3ee';
+  ctx.fillStyle = S.mode === 'FAILED' ? '#fbbf24' : S.mode === 'LANDED' ? '#3ddc97' : S.mode === 'RTH' ? '#ff5c7a' : '#22d3ee';
+  ctx.beginPath(); ctx.moveTo(0, -15); ctx.lineTo(-11, 10); ctx.lineTo(0, 4); ctx.lineTo(11, 10); ctx.closePath(); ctx.fill(); ctx.restore();
+  const we = worldToScreen(-210, -190), w2 = worldToScreen(-210 + S.wind_v * Math.cos(S.wind_dir) * 9, -190 + S.wind_v * Math.sin(S.wind_dir) * 9);
+  ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(we.x, we.y); ctx.lineTo(w2.x, w2.y); ctx.stroke();
+  ctx.fillStyle = '#fbbf24'; ctx.font = '12px system-ui'; ctx.textAlign = 'left'; ctx.fillText('wind', we.x + 22, we.y - 6);
+  if (S.gust) { ctx.fillStyle = 'rgba(251,191,36,.10)'; ctx.fillRect(0,0,W,H); ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 14px system-ui'; ctx.fillText('DYNAMIC GUST FRONT', 18, 28); }
+  if (S.fault) { ctx.fillStyle = 'rgba(255,92,122,.10)'; ctx.fillRect(0,0,W,H); ctx.fillStyle = '#ff5c7a'; ctx.font = 'bold 14px system-ui'; ctx.fillText('EXTRA DRAIN FAULT', 18, 52); }
+}
+
+function log(msg, cls = '') {
+  const box = el('logBox');
+  const div = document.createElement('div');
+  div.className = cls;
+  div.textContent = `[${S.t.toFixed(1)}s] ${msg}`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  while (box.children.length > 180) box.removeChild(box.firstChild);
+}
+function updateSliders() {
+  el('tau-val').textContent = gp('tau').toFixed(2);
+  el('mass-val').textContent = gp('mass').toFixed(2) + ' kg';
+  el('batt-val').textContent = gp('batt').toFixed(0) + ' Wh';
+  el('health-val').textContent = (gp('health') * 100).toFixed(0) + '%';
+  el('cruise-val').textContent = gp('cruise').toFixed(1) + ' m/s';
+  el('soc-unc-val').textContent = gp('soc-unc').toFixed(2);
+  el('wind-val').textContent = gp('wind').toFixed(1) + ' m/s';
+  el('wind-unc-val').textContent = gp('wind-unc').toFixed(1);
+  el('mc-n-val').textContent = String(parseInt(gp('mc-n'), 10));
+  el('riskHud').textContent = 'τ = ' + gp('tau').toFixed(2);
+}
+function setInputs(values) { Object.entries(values).forEach(([k, v]) => { el(k).value = v; }); }
+function loadScenario(name) {
+  S.scenario = name;
+  if (name === 'calm') setInputs({ mass: 1.15, batt: 77, health: .98, cruise: 9, wind: 1.5, 'soc-unc': .03, 'wind-unc': .5, tau: .64 });
+  if (name === 'headwind') setInputs({ mass: 1.25, batt: 77, health: .95, cruise: 9, wind: 6, 'soc-unc': .04, 'wind-unc': 1.8, tau: .78 });
+  if (name === 'gusts') setInputs({ mass: 1.25, batt: 77, health: .92, cruise: 8.5, wind: 5, 'soc-unc': .05, 'wind-unc': 3, tau: .84 });
+  if (name === 'aged') setInputs({ mass: 1.25, batt: 77, health: .78, cruise: 8.5, wind: 4, 'soc-unc': .07, 'wind-unc': 1.5, tau: .90 });
+  if (name === 'payload') setInputs({ mass: 2.1, batt: 110, health: .90, cruise: 7.5, wind: 5.5, 'soc-unc': .06, 'wind-unc': 2.2, tau: .88 });
+  if (name === 'fault') setInputs({ mass: 1.35, batt: 77, health: .88, cruise: 8, wind: 4, 'soc-unc': .06, 'wind-unc': 1.5, tau: .82 });
+  updateSliders(); resetSim(); log('Scenario loaded: ' + name, 'info');
+}
+function resetSim() {
+  clearInterval(S.interval);
+  S.running = false; S.paused = false; S.t = 0; S.mode = 'MISSION'; S.soc = 1; S.soc_est = 1; S.wind_v = gp('wind'); S.wind_dir = Math.random() * Math.PI * 2; S.p_safe = 1; S.marginWh = 0; S.gust = false; S.fault = false; S.rth_t = -1;
+  const r = 190;
+  S.home = { x: -r/2, y: -r/2 };
+  S.goal = { x: r/2 + (Math.random()*70 - 35), y: r/2 + (Math.random()*70 - 35) };
+  S.pos = { ...S.home };
+  S.path = [{ ...S.pos }];
+  el('btn-start').disabled = false; el('btn-pause').disabled = true; el('btn-pause').textContent = '⏸ Pause';
+  el('logBox').innerHTML = '';
+  initCharts(); updateUI(); drawMap();
+  const p = droneParams();
+  log(`/uav/drone mass=${p.mass.toFixed(2)}kg capacity=${p.cap.toFixed(0)}Wh health=${(p.health*100).toFixed(0)}%`, 'info');
+  log(`/uav/battery usable=${availableWh(1).toFixed(1)}Wh reserve=${p.reserve.toFixed(1)}Wh`, 'info');
+  log(`/uav/wind v=${S.wind_v.toFixed(1)}m/s dir=${(S.wind_dir*180/Math.PI).toFixed(0)}°`, 'info');
+}
+function updateUI() {
+  const socPct = 100 * S.soc_est;
+  el('socVal').textContent = socPct.toFixed(1) + '%';
+  el('socVal').className = 'value ' + (socPct < 22 ? 'bad' : socPct < 42 ? 'warn' : 'good');
+  el('probVal').textContent = S.p_safe.toFixed(3);
+  el('probVal').className = 'value ' + (S.p_safe < gp('tau') ? 'bad' : S.p_safe < gp('tau') + .1 ? 'warn' : 'good');
+  el('marginVal').textContent = S.marginWh.toFixed(1) + ' Wh';
+  el('marginVal').className = 'value ' + (S.marginWh < 0 ? 'bad' : S.marginWh < 8 ? 'warn' : 'good');
+  el('distVal').textContent = Math.hypot(S.pos.x - S.home.x, S.pos.y - S.home.y).toFixed(0) + ' m';
+  el('modeCard').innerHTML = `<span class="mode ${S.mode.toLowerCase()}"><span class="pulse"></span>${S.mode}</span>`;
+  el('riskFill').style.width = (S.p_safe * 100).toFixed(1) + '%';
+  el('riskFill').style.background = S.p_safe < gp('tau') ? 'linear-gradient(90deg,#ff5c7a,#fbbf24)' : 'linear-gradient(90deg,#3ddc97,#22d3ee)';
+  el('decisionText').textContent = S.p_safe < gp('tau') ? 'Trigger Return-to-Home' : 'Continue Mission';
+  el('decisionSub').textContent = `P(safe)=${S.p_safe.toFixed(3)}, τ=${gp('tau').toFixed(2)}, margin=${S.marginWh.toFixed(1)}Wh`;
+  el('windHud').textContent = `wind ${S.wind_v.toFixed(1)} m/s`;
+  const m = S.metrics;
+  el('m-runs').textContent = m.runs;
+  if (m.runs > 0) {
+    el('m-success').textContent = ((m.success / m.runs) * 100).toFixed(0) + '%';
+    el('m-safe').textContent = ((m.safe_ret / m.runs) * 100).toFixed(0) + '%';
+    el('m-fail').textContent = ((m.fail / m.runs) * 100).toFixed(0) + '%';
+    el('m-rth-t').textContent = m.rth_times.length ? (m.rth_times.reduce((a,b)=>a+b,0)/m.rth_times.length).toFixed(1) + 's' : 'N/A';
+  }
+}
+function finish(outcome) {
+  S.running = false; clearInterval(S.interval);
+  S.metrics.runs++;
+  if (outcome === 'success') { S.metrics.success++; S.metrics.safe_ret++; }
+  else if (outcome === 'rth_safe') S.metrics.safe_ret++;
+  else S.metrics.fail++;
+  el('btn-start').disabled = false; el('btn-pause').disabled = true;
+  updateUI(); drawMap();
+}
+function stepToward(target) {
+  const head = S.wind_v * Math.cos(S.wind_dir - S.heading);
+  const speed = Math.max(2.5, gp('cruise') - Math.max(0, head) * .35);
+  S.pos.x += Math.cos(S.heading) * speed * S.dt;
+  S.pos.y += Math.sin(S.heading) * speed * S.dt;
+  const drainWh = powerW(gp('mass'), gp('cruise'), head) * (S.dt / 3600) * (S.fault ? 2.6 : 1);
+  S.soc = Math.max(0, S.soc - drainWh / (gp('batt') * gp('health')));
+}
+function tick() {
+  if (!S.running || S.paused) return;
+  S.t += S.dt;
+  if (S.scenario === 'headwind') S.wind_v = Math.min(13, gp('wind') + S.t * .045);
+  S.gust = S.scenario === 'gusts' && Math.floor(S.t / 7) % 2 === 1;
+  S.fault = S.scenario === 'fault' && S.t > 25 && S.t < 38;
+  if (S.gust) S.wind_v = Math.max(0, gp('wind') + 4 + randn() * 2.3);
+  else if (S.scenario !== 'headwind') S.wind_v = Math.max(0, gp('wind') + randn() * .35);
+  S.wind_dir += randn() * .018;
+  const sig = gp('soc-unc');
+  const bias = (S.scenario === 'aged' || S.scenario === 'fault') ? .04 : 0;
+  S.soc_est = Math.max(0, Math.min(1, S.soc + bias + randn() * sig * .28));
+  S.p_safe = mcSafeProbability();
+  const distHome = Math.hypot(S.pos.x - S.home.x, S.pos.y - S.home.y);
+  const angleHome = Math.atan2(S.home.y - S.pos.y, S.home.x - S.pos.x);
+  const headHome = S.wind_v * Math.cos(S.wind_dir - angleHome);
+  S.marginWh = availableWh(S.soc) - returnEnergyWh(distHome, headHome);
+  if (S.mode === 'MISSION') {
+    const dx = S.goal.x - S.pos.x, dy = S.goal.y - S.pos.y;
+    const distGoal = Math.hypot(dx, dy);
+    if (distGoal < 9) { S.mode = 'LANDED'; log('/uav/mode → LANDED goal reached', 'ok'); finish('success'); return; }
+    S.heading = Math.atan2(dy, dx);
+    stepToward(S.goal);
+    if (S.p_safe < gp('tau')) {
+      S.mode = 'RTH'; S.rth_t = S.t; S.metrics.rth_times.push(S.t);
+      log(`/uav/rth_trigger TRUE P=${S.p_safe.toFixed(3)} margin=${S.marginWh.toFixed(1)}Wh`, 'bad');
+    }
+  } else if (S.mode === 'RTH') {
+    const dx = S.home.x - S.pos.x, dy = S.home.y - S.pos.y;
+    const distHome2 = Math.hypot(dx, dy);
+    if (distHome2 < 9) { S.mode = 'LANDED'; log('/uav/mode → LANDED returned safely', 'ok'); finish('rth_safe'); return; }
+    S.heading = Math.atan2(dy, dx);
+    stepToward(S.home);
+  }
+  if (availableWh(S.soc) <= 1) { S.mode = 'FAILED'; log('BATTERY DEPLETED', 'bad'); finish('fail'); return; }
+  S.path.push({ ...S.pos }); if (S.path.length > 700) S.path.shift();
+  const k = Math.round(S.t / S.dt);
+  if (k % 5 === 0) {
+    log(`/uav/state x=${S.pos.x.toFixed(1)} y=${S.pos.y.toFixed(1)} mode=${S.mode}`);
+    log(`/uav/risk_return P=${S.p_safe.toFixed(3)} margin=${S.marginWh.toFixed(1)}Wh`, S.p_safe < gp('tau') ? 'bad' : 'info');
+  }
+  if (histChart && k % 3 === 0) {
+    histChart.data.labels.push(S.t.toFixed(1));
+    histChart.data.datasets[0].data.push(+S.p_safe.toFixed(3));
+    histChart.data.datasets[1].data.push(+S.soc_est.toFixed(3));
+    histChart.data.datasets[2].data.push(Math.max(-.5, Math.min(1, S.marginWh / gp('batt'))));
+    if (histChart.data.labels.length > 240) { histChart.data.labels.shift(); histChart.data.datasets.forEach(ds => ds.data.shift()); }
+    histChart.update();
+  }
+  if (mcChart && k % 20 === 0) {
+    const bins = Array(21).fill(0);
+    for (let i = 0; i < 350; i++) {
+      const ww = Math.max(0, S.wind_v + randn() * gp('wind-unc'));
+      const cost = returnEnergyWh(distHome, ww * Math.cos(S.wind_dir - angleHome));
+      bins[Math.min(20, Math.floor(cost / 5))]++;
+    }
+    mcChart.data.datasets[0].data = bins; mcChart.update();
+  }
+  updateUI(); drawMap();
+}
+function startSim() {
+  if (S.mode === 'LANDED' || S.mode === 'FAILED') resetSim();
+  S.running = true; S.paused = false;
+  el('btn-start').disabled = true; el('btn-pause').disabled = false;
+  log('Simulation started', 'info');
+  clearInterval(S.interval);
+  S.interval = setInterval(tick, 50);
+}
+function pauseSim() {
+  S.paused = !S.paused;
+  el('btn-pause').textContent = S.paused ? '▶ Resume' : '⏸ Pause';
+  log(S.paused ? 'Paused' : 'Resumed', 'info');
+}
+
+['tau','mass','batt','health','cruise','soc-unc','wind','wind-unc','mc-n'].forEach(id => el(id).addEventListener('input', () => { updateSliders(); if (!S.running) resetSim(); }));
+window.addEventListener('resize', () => { resize(); drawMap(); });
+updateSliders();
+setTimeout(() => { resize(); resetSim(); }, 120);
 </script>
 </body>
 </html>
