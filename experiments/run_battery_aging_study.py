@@ -2,7 +2,7 @@
 """Battery aging study for the UAV return-to-home experiments.
 
 This script studies how battery health degradation affects deterministic,
-risk-aware Monte Carlo, and adaptive risk-aware RTH policies.
+risk-aware Monte Carlo, adaptive risk-aware, and health-aware risk policies.
 
 Run from the repository root:
 
@@ -32,6 +32,7 @@ POLICIES = [
     PolicyConfig(name="deterministic_threshold", deterministic_soc_threshold=0.50),
     PolicyConfig(name="risk_aware_mc", risk_threshold=0.95, mc_samples=100),
     PolicyConfig(name="adaptive_risk_mc", risk_threshold=0.88, mc_samples=100),
+    PolicyConfig(name="health_aware_risk_mc", risk_threshold=0.95, mc_samples=100),
 ]
 
 BATTERY_HEALTH_LEVELS = [1.00, 0.95, 0.90, 0.80, 0.70]
@@ -42,12 +43,13 @@ def ci95(rate: float, n: int) -> float:
 
 
 def apply_battery_health(scenario, battery_health: float):
-    """Reduce true available energy while keeping the estimator imperfect.
+    """Reduce true available energy and expose battery health to health-aware policies.
 
-    In this standalone experiment, battery aging is represented as reduced
-    effective initial SoC. The SoC estimator is made mildly optimistic when the
-    battery is degraded, mimicking a realistic calibration error where the UAV
-    reports charge percentage but not full capacity loss.
+    Battery aging is represented as reduced effective initial SoC. The SoC
+    estimator is made mildly optimistic when the battery is degraded, mimicking
+    a calibration error where the UAV reports charge percentage but does not
+    fully account for capacity loss. Health-aware policies receive the explicit
+    battery_health value and account for it in the Monte Carlo feasibility test.
     """
     degradation = 1.0 - battery_health
     return replace(
@@ -55,6 +57,7 @@ def apply_battery_health(scenario, battery_health: float):
         name=f"{scenario.name}_health_{int(battery_health * 100)}pct",
         initial_soc=scenario.initial_soc * battery_health,
         soc_bias=scenario.soc_bias + 0.35 * degradation,
+        battery_health=battery_health,
     )
 
 
@@ -132,6 +135,7 @@ def main():
     plot_metric(rows, "failure_rate", args.output_dir / "battery_health_vs_failure.png", "Failure rate vs battery health")
     plot_metric(rows, "safe_return_rate", args.output_dir / "battery_health_vs_safe_return.png", "Safe return rate vs battery health")
     plot_metric(rows, "mean_battery_left", args.output_dir / "battery_health_vs_remaining_energy.png", "Remaining energy vs battery health")
+    plot_metric(rows, "rth_trigger_rate", args.output_dir / "battery_health_vs_rth_trigger.png", "RTH trigger rate vs battery health")
     print(f"Wrote battery aging study to {args.output_dir}")
 
 
