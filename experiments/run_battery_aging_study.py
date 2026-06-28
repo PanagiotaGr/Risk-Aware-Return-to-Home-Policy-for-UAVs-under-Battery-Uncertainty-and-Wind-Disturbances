@@ -43,14 +43,7 @@ def ci95(rate: float, n: int) -> float:
 
 
 def apply_battery_health(scenario, battery_health: float):
-    """Reduce true available energy and expose battery health to health-aware policies.
-
-    Battery aging is represented as reduced effective initial SoC. The SoC
-    estimator is made mildly optimistic when the battery is degraded, mimicking
-    a calibration error where the UAV reports charge percentage but does not
-    fully account for capacity loss. Health-aware policies receive the explicit
-    battery_health value and account for it in the Monte Carlo feasibility test.
-    """
+    """Reduce true available energy and expose battery health to health-aware policies."""
     degradation = 1.0 - battery_health
     return replace(
         scenario,
@@ -69,6 +62,8 @@ def summarize(results, policy_name, battery_health):
     rth = mean(r.rth_triggered for r in results)
     completion = [r.mission_completion_ratio for r in results]
     distance = [r.distance_completed for r in results]
+    margin = [r.energy_margin for r in results]
+    normalized_margin = [r.normalized_energy_margin for r in results]
     battery = [r.battery_left for r in results]
     return {
         "battery_health": battery_health,
@@ -83,6 +78,10 @@ def summarize(results, policy_name, battery_health):
         "early_rth_ci95": ci95(early, n),
         "mission_completion_rate": mean(completion),
         "mean_distance_completed": mean(distance),
+        "mean_energy_margin": mean(margin),
+        "std_energy_margin": pstdev(margin) if n > 1 else 0.0,
+        "mean_normalized_energy_margin": mean(normalized_margin),
+        "negative_margin_rate": mean(value < 0.0 for value in margin),
         "mean_battery_left": mean(battery),
         "std_battery_left": pstdev(battery) if n > 1 else 0.0,
     }
@@ -139,6 +138,8 @@ def main():
     plot_metric(rows, "failure_rate", args.output_dir / "battery_health_vs_failure.png", "Failure rate vs battery health")
     plot_metric(rows, "safe_return_rate", args.output_dir / "battery_health_vs_safe_return.png", "Safe return rate vs battery health")
     plot_metric(rows, "mission_completion_rate", args.output_dir / "battery_health_vs_mission_completion.png", "Mission completion vs battery health")
+    plot_metric(rows, "mean_energy_margin", args.output_dir / "battery_health_vs_energy_margin.png", "Energy margin vs battery health")
+    plot_metric(rows, "negative_margin_rate", args.output_dir / "battery_health_vs_negative_margin_rate.png", "Negative margin rate vs battery health")
     plot_metric(rows, "mean_battery_left", args.output_dir / "battery_health_vs_remaining_energy.png", "Remaining energy vs battery health")
     plot_metric(rows, "rth_trigger_rate", args.output_dir / "battery_health_vs_rth_trigger.png", "RTH trigger rate vs battery health")
     print(f"Wrote battery aging study to {args.output_dir}")
