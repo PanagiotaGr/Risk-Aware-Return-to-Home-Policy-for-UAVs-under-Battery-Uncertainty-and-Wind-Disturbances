@@ -3,11 +3,12 @@
 Reproducible Monte Carlo experiments for risk-aware UAV return-to-home policies.
 
 The script is intentionally standalone so that the experimental results can be
-reproduced without launching the ROS 2 runtime. It compares three policies:
+reproduced without launching the ROS 2 runtime. It compares four policies:
 
 1. deterministic_threshold: triggers RTH when estimated SoC is below a fixed threshold
 2. risk_aware_mc: estimates P(safe return) with Monte Carlo sampling
 3. adaptive_risk_mc: adjusts the risk threshold using wind, distance, and SoC uncertainty
+4. health_aware_risk_mc: estimates returnability using battery health degradation
 
 Outputs:
 - results/experiment_trials.csv: one row per trial
@@ -20,7 +21,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import math
 import random
 from dataclasses import dataclass, asdict
 from pathlib import Path
@@ -45,6 +45,7 @@ class Scenario:
     wind_direction: str
     extra_drain_probability: float
     extra_drain_soc: float
+    battery_health: float = 1.0
 
 
 @dataclass(frozen=True)
@@ -63,6 +64,7 @@ class TrialResult:
     distance_m: float
     initial_soc_true: float
     initial_soc_estimated: float
+    battery_health: float
     wind_mps: float
     wind_direction: str
     return_energy_required: float
@@ -103,10 +105,13 @@ def estimate_safe_return_probability(
     scenario: Scenario,
     rng: random.Random,
     mc_samples: int,
+    use_battery_health: bool = False,
 ) -> float:
     feasible = 0
     for _ in range(mc_samples):
         sampled_soc = max(0.0, min(1.0, rng.gauss(estimated_soc - scenario.soc_bias, scenario.soc_noise_std)))
+        if use_battery_health:
+            sampled_soc *= scenario.battery_health
         sampled_wind = max(0.0, rng.gauss(scenario.wind_mean_mps, scenario.wind_std_mps))
         sampled_extra = scenario.extra_drain_soc if rng.random() < scenario.extra_drain_probability else 0.0
         required = return_energy(scenario.distance_m, sampled_wind, scenario.wind_direction, sampled_extra)
@@ -119,7 +124,8 @@ def adaptive_threshold(base_tau: float, scenario: Scenario) -> float:
     wind_risk = min(0.08, 0.008 * scenario.wind_mean_mps)
     uncertainty_risk = min(0.08, 1.8 * scenario.soc_noise_std)
     distance_risk = min(0.06, scenario.distance_m / 15000.0)
-    return max(0.75, min(0.99, base_tau + wind_risk + uncertainty_risk + distance_risk))
+    health_risk = min(0.10, 0.25 * (1.0 - scenario.battery_health))
+    return max(0.75, min(0.99, base_tau + wind_risk + uncertainty_risk + distance_risk + health_risk))
 
 
 def should_trigger_rth(policy: PolicyConfig, scenario: Scenario, estimated_soc: float, rng: random.Random) -> Tuple[bool, float, float]:
@@ -127,10 +133,17 @@ def should_trigger_rth(policy: PolicyConfig, scenario: Scenario, estimated_soc: 
         return estimated_soc < policy.deterministic_soc_threshold, float("nan"), policy.deterministic_soc_threshold
 
     tau = policy.risk_threshold
+    use_battery_health = policy.name == "health_aware_risk_mc"
     if policy.name == "adaptive_risk_mc":
         tau = adaptive_threshold(policy.risk_threshold, scenario)
 
-    probability = estimate_safe_return_probability(estimated_soc, scenario, rng, policy.mc_samples)
+    probability = estimate_safe_return_probability(
+        estimated_soc,
+        scenario,
+        rng,
+        policy.mc_samples,
+        use_battery_health=use_battery_health,
+    )
     return probability < tau, probability, tau
 
 
@@ -156,6 +169,7 @@ def run_trial(scenario: Scenario, policy: PolicyConfig, trial: int, seed: int) -
         distance_m=scenario.distance_m,
         initial_soc_true=true_soc,
         initial_soc_estimated=estimated_soc,
+        battery_health=scenario.battery_health,
         wind_mps=actual_wind,
         wind_direction=scenario.wind_direction,
         return_energy_required=required,
@@ -243,6 +257,7 @@ def default_policies(mc_samples: int) -> List[PolicyConfig]:
         PolicyConfig(name="deterministic_threshold", deterministic_soc_threshold=0.30, mc_samples=mc_samples),
         PolicyConfig(name="risk_aware_mc", risk_threshold=0.90, mc_samples=mc_samples),
         PolicyConfig(name="adaptive_risk_mc", risk_threshold=0.88, mc_samples=mc_samples),
+        PolicyConfig(name="health_aware_risk_mc", risk_threshold=0.90, mc_samples=mc_samples),
     ]
 
 
