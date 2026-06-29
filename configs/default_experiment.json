@@ -1,0 +1,12 @@
+{
+  "trials": 200,
+  "mc_samples": 500,
+  "seed": 7,
+  "output_dir": "results",
+  "deterministic_soc_threshold": 0.30,
+  "risk_threshold": 0.90,
+  "adaptive_base_threshold": 0.88,
+  "base_return_energy_per_m": 0.00042,
+  "safety_reserve_soc": 0.08,
+  "early_rth_margin": 0.18
+}
