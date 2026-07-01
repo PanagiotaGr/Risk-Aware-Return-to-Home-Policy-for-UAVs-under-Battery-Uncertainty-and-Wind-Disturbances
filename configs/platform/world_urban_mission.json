@@ -1,0 +1,35 @@
+{
+  "risk_scenario_path": "configs/platform/default_scenario.json",
+  "dt_s": 1.0,
+  "max_steps": 450,
+  "world": {
+    "width_m": 2200.0,
+    "height_m": 1600.0,
+    "home": [120.0, 120.0],
+    "no_fly_zones": [
+      {"name": "hospital_zone", "center": [950.0, 720.0], "radius_m": 160.0},
+      {"name": "restricted_airspace", "center": [1450.0, 1050.0], "radius_m": 220.0}
+    ],
+    "landing_sites": [
+      {"name": "park_landing_site", "position": [700.0, 280.0], "radius_m": 80.0, "risk_score": 0.15},
+      {"name": "sports_field", "position": [1780.0, 1280.0], "radius_m": 100.0, "risk_score": 0.25}
+    ]
+  },
+  "mission": {
+    "acceptance_radius_m": 25.0,
+    "waypoints": [[450.0, 320.0], [900.0, 480.0], [1280.0, 780.0], [1760.0, 1180.0]]
+  },
+  "wind": {
+    "base_speed_mps": 6.0,
+    "base_direction_rad": 0.4,
+    "spatial_scale_m": 420.0,
+    "gust_std_mps": 1.8,
+    "seed": 24
+  },
+  "uav": {
+    "cruise_speed_mps": 18.0,
+    "battery_soc": 0.88,
+    "battery_health": 0.9,
+    "payload_kg": 0.35
+  }
+}
