@@ -213,7 +213,7 @@ python3 experiments/run_ablation_studies.py --trials 200
 
 ---
 
-## ⚙️ Quick Start
+##  Quick Start
 
 ### Python Experiments
 
@@ -326,7 +326,7 @@ Risk-Aware-Return-to-Home-Policy-for-UAVs-under-Battery-Uncertainty-and-Wind-Dis
 
 ---
 
-## 📏 Evaluation Metrics
+##  Evaluation Metrics
 
 | Metric | Meaning |
 |---|---|
