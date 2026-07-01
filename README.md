@@ -26,7 +26,7 @@
 
 ---
 
-### ✨ What this project does
+###  What this project does
 
 This repository develops and evaluates a **risk-aware Return-to-Home (RTH) policy** for unmanned aerial vehicles operating under uncertain battery state, battery degradation, and wind disturbances. Instead of relying only on a fixed battery threshold, the UAV estimates the probability of returning safely and triggers RTH when the estimated risk becomes unacceptable.
 
@@ -34,7 +34,7 @@ This repository develops and evaluates a **risk-aware Return-to-Home (RTH) polic
 
 ---
 
-## 📌 Project Overview
+##  Project Overview
 
 Safety-critical UAV missions are affected by several uncertain factors: the remaining state of charge may be noisy, the battery may be degraded, and wind conditions can change during flight. A deterministic RTH threshold can therefore be too late or too conservative.
 
@@ -63,7 +63,7 @@ where `τ` is the risk threshold.
 
 ---
 
-## 🧠 Core Idea
+##  Core Idea
 
 ```text
 UAV State + Battery Estimate + Wind Estimate
@@ -82,20 +82,20 @@ The decision layer samples possible return outcomes and evaluates whether the UA
 
 ---
 
-## 🚀 Main Contributions
+##  Main Contributions
 
 | Contribution | Description |
 |---|---|
-| 🎲 **Monte Carlo RTH policy** | Estimates the probability of safe return using sampled battery, wind, and energy-demand uncertainty. |
-| 📈 **Adaptive risk threshold** | Adjusts conservativeness according to uncertainty, wind intensity, distance, and battery health. |
-| 🔋 **Battery-health-aware planning** | Accounts for degraded battery capacity during return feasibility estimation. |
-| 🌬️ **Dynamic wind gust evaluation** | Tests the policies under time-varying gust scenarios instead of only steady wind. |
-| ⚖️ **Safety-efficiency analysis** | Measures both safe-return behavior and mission completion trade-offs. |
-| 🔁 **Reproducible experiments** | Provides scripts, CSV outputs, and plots for systematic evaluation. |
+|  **Monte Carlo RTH policy** | Estimates the probability of safe return using sampled battery, wind, and energy-demand uncertainty. |
+|  **Adaptive risk threshold** | Adjusts conservativeness according to uncertainty, wind intensity, distance, and battery health. |
+|  **Battery-health-aware planning** | Accounts for degraded battery capacity during return feasibility estimation. |
+|  **Dynamic wind gust evaluation** | Tests the policies under time-varying gust scenarios instead of only steady wind. |
+|  **Safety-efficiency analysis** | Measures both safe-return behavior and mission completion trade-offs. |
+| **Reproducible experiments** | Provides scripts, CSV outputs, and plots for systematic evaluation. |
 
 ---
 
-## 🧪 Policies Compared
+##  Policies Compared
 
 | Policy | Decision Logic | Main Characteristic |
 |---|---|---|
@@ -106,7 +106,7 @@ The decision layer samples possible return outcomes and evaluates whether the UA
 
 ---
 
-## 📊 Key Results
+##  Key Results
 
 ### Main Policy Comparison
 
@@ -201,7 +201,7 @@ python3 experiments/run_ablation_studies.py --trials 200
 
 ---
 
-## ✅ Main Conclusions
+##  Main Conclusions
 
 1. **Deterministic thresholding is not sufficient for safety-critical RTH decisions.**
 2. **Monte Carlo risk estimation improves safe-return behavior under uncertainty.**
@@ -245,7 +245,7 @@ results_wind_gust/
 
 ---
 
-## 🤖 ROS 2 Simulation
+##  ROS 2 Simulation
 
 ### Prerequisites
 
@@ -299,7 +299,7 @@ Live demo:
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```text
 Risk-Aware-Return-to-Home-Policy-for-UAVs-under-Battery-Uncertainty-and-Wind-Disturbances/
@@ -342,7 +342,7 @@ Risk-Aware-Return-to-Home-Policy-for-UAVs-under-Battery-Uncertainty-and-Wind-Dis
 
 ---
 
-## 🔬 Research Relevance
+##  Research Relevance
 
 This repository is relevant to:
 
@@ -363,7 +363,7 @@ Potential future extensions include:
 
 ---
 
-## 📚 Citation
+##  Citation
 
 If you use this project in research, you may cite it as:
 
@@ -380,7 +380,7 @@ If you use this project in research, you may cite it as:
 
 ---
 
-## 👩‍💻 Author
+##  Author
 
 <div align="center">
 
@@ -392,7 +392,7 @@ Democritus University of Thrace
 
 ---
 
-## 📄 License
+##  License
 
 This project is released under the **MIT License**. See the [LICENSE](LICENSE) file for details.
 
