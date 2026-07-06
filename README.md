@@ -138,6 +138,18 @@ python3 experiments/run_monte_carlo_experiments.py --trials 200 --mc-samples 500
 
 **Interpretation.** The deterministic baseline preserves mission completion because it rarely triggers RTH. The risk-aware policies trigger RTH more often because they explicitly evaluate return feasibility under uncertainty.
 
+### Research Platform Benchmark
+
+```bash
+python3 scripts/run_research_platform.py \
+  --scenario configs/platform/default_scenario.json \
+  --trials 200 \
+  --output results_platform/platform_benchmark.csv \
+  --timeline results_platform/latest_timeline.json
+```
+
+This command writes aggregate metrics with 95% confidence intervals and a representative decision timeline.
+
 ### Battery Aging Study
 
 ```bash
@@ -173,6 +185,7 @@ python3 experiments/run_monte_carlo_experiments.py --trials 200 --mc-samples 500
 python3 experiments/run_ablation_studies.py --trials 200
 python3 experiments/run_battery_aging_study.py --trials 200
 python3 experiments/run_wind_gust_study.py --trials 200
+python3 scripts/run_research_platform.py --trials 200
 ```
 
 Generated result folders:
@@ -182,6 +195,7 @@ results/
 results_ablation/
 results_battery_aging/
 results_wind_gust/
+results_platform/
 ```
 
 ---
@@ -265,6 +279,7 @@ Live demo:
 | [`docs/PUBLICATION_PLAN.md`](docs/PUBLICATION_PLAN.md) | Paper sequence and target contribution plan. |
 | [`docs/CONTRIBUTING_RESEARCH.md`](docs/CONTRIBUTING_RESEARCH.md) | Contribution rules for scientific extensions. |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Implementation roadmap toward full safe autonomy. |
+| [`docs/CLI_BENCHMARK_EXPORTS.md`](docs/CLI_BENCHMARK_EXPORTS.md) | CLI benchmark outputs for paper-style runs. |
 
 ---
 
@@ -277,6 +292,7 @@ Risk-Aware-Return-to-Home-Policy-for-UAVs-under-Battery-Uncertainty-and-Wind-Dis
 ├── results*/                    # Generated result folders
 ├── src/                         # ROS 2 source packages
 ├── risk_rth/                    # Python implementation components
+├── risk_rth_platform/           # Modular platform benchmark layer
 ├── scripts/                     # Utility scripts
 ├── tests/                       # Tests
 ├── docs/                        # PhD-level research documentation
