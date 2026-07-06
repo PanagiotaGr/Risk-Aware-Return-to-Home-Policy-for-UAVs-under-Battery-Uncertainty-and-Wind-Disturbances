@@ -150,6 +150,14 @@ python3 scripts/run_research_platform.py \
 
 This command writes aggregate metrics with 95% confidence intervals and a representative decision timeline.
 
+Generate diagnostic figures from the per-trial CSV:
+
+```bash
+python3 scripts/plot_platform_trials.py \
+  --trials results_platform/platform_trials.csv \
+  --output-dir results_platform/figures
+```
+
 ### Battery Aging Study
 
 ```bash
@@ -186,6 +194,7 @@ python3 experiments/run_ablation_studies.py --trials 200
 python3 experiments/run_battery_aging_study.py --trials 200
 python3 experiments/run_wind_gust_study.py --trials 200
 python3 scripts/run_research_platform.py --trials 200
+python3 scripts/plot_platform_trials.py
 ```
 
 Generated result folders:
@@ -280,6 +289,7 @@ Live demo:
 | [`docs/CONTRIBUTING_RESEARCH.md`](docs/CONTRIBUTING_RESEARCH.md) | Contribution rules for scientific extensions. |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Implementation roadmap toward full safe autonomy. |
 | [`docs/CLI_BENCHMARK_EXPORTS.md`](docs/CLI_BENCHMARK_EXPORTS.md) | CLI benchmark outputs for paper-style runs. |
+| [`docs/PLATFORM_PLOTS.md`](docs/PLATFORM_PLOTS.md) | Plotting workflow for platform benchmark outputs. |
 
 ---
 
