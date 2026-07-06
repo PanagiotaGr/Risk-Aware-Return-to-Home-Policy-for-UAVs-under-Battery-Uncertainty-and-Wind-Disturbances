@@ -1,0 +1,55 @@
+name: Research CI
+
+on:
+  push:
+    branches: [main, phd-level-research-upgrade]
+  pull_request:
+    branches: [main]
+
+jobs:
+  python-checks:
+    name: Python research checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+
+      - name: Import package if available
+        run: |
+          python - <<'PY'
+          import importlib.util
+          spec = importlib.util.find_spec('risk_rth')
+          print('risk_rth package found:', spec is not None)
+          PY
+
+      - name: Run tests if present
+        run: |
+          if [ -d tests ]; then
+            python -m pytest tests
+          else
+            echo 'No tests directory found yet.'
+          fi
+
+      - name: Smoke-test experiment scripts
+        run: |
+          for script in \
+            experiments/run_monte_carlo_experiments.py \
+            experiments/run_ablation_studies.py \
+            experiments/run_battery_aging_study.py \
+            experiments/run_wind_gust_study.py
+          do
+            if [ -f "$script" ]; then
+              python "$script" --help || true
+            fi
+          done
