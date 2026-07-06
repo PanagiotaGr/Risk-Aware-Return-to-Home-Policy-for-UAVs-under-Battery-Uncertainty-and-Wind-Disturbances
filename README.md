@@ -1,47 +1,69 @@
 <div align="center">
 
-# 🚁 Risk-Aware Return-to-Home Policy for UAVs
+# 🚁 Probabilistic Safe Autonomy for Energy-Constrained UAVs
 
-### Safe UAV Mission Execution under Battery Uncertainty, Battery Aging & Dynamic Wind Disturbances
+### Risk-Aware Return-to-Home, Battery Uncertainty, Wind Disturbances & Sequential Safety Decisions
 
 <p>
-  <b>Probabilistic RTH decision-making</b> · <b>Monte Carlo risk estimation</b> · <b>Battery-health-aware autonomy</b> · <b>Dynamic wind evaluation</b>
+  <b>Probabilistic robotics</b> · <b>Risk-aware decision making</b> · <b>Battery-health-aware autonomy</b> · <b>Wind-robust UAV planning</b> · <b>Safe mission supervision</b>
 </p>
 
 <p>
   <a href="https://python.org"><img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.10+"/></a>
   <a href="https://docs.ros.org"><img src="https://img.shields.io/badge/ROS2-Jazzy-22314E?style=for-the-badge&logo=ros&logoColor=white" alt="ROS2 Jazzy"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-4CAF50?style=for-the-badge" alt="MIT License"/></a>
-  <img src="https://img.shields.io/badge/Risk-Monte%20Carlo-8E44AD?style=for-the-badge" alt="Monte Carlo Risk"/>
-  <img src="https://img.shields.io/badge/UAV-Return--to--Home-E67E22?style=for-the-badge" alt="UAV Return to Home"/>
+  <img src="https://img.shields.io/badge/Research-PhD%20Level-8E44AD?style=for-the-badge" alt="PhD-level research"/>
+  <img src="https://img.shields.io/badge/Safety-Probabilistic-E67E22?style=for-the-badge" alt="Probabilistic safety"/>
 </p>
 
 <p>
-  <a href="#-project-overview">Overview</a> •
-  <a href="#-key-results">Key Results</a> •
-  <a href="#-quick-start">Quick Start</a> •
-  <a href="#-interactive-simulator">Simulator</a> •
+  <a href="#-research-vision">Vision</a> •
+  <a href="#-scientific-problem">Scientific Problem</a> •
+  <a href="#-framework">Framework</a> •
+  <a href="#-experiments">Experiments</a> •
+  <a href="#-phd-research-agenda">PhD Agenda</a> •
   <a href="#-citation">Citation</a>
 </p>
-
----
-
-###  What this project does
-
-This repository develops and evaluates a **risk-aware Return-to-Home (RTH) policy** for unmanned aerial vehicles operating under uncertain battery state, battery degradation, and wind disturbances. Instead of relying only on a fixed battery threshold, the UAV estimates the probability of returning safely and triggers RTH when the estimated risk becomes unacceptable.
 
 </div>
 
 ---
 
-##  Project Overview
+##  Research Vision
 
-Safety-critical UAV missions are affected by several uncertain factors: the remaining state of charge may be noisy, the battery may be degraded, and wind conditions can change during flight. A deterministic RTH threshold can therefore be too late or too conservative.
+This repository is being developed as a **PhD-level research framework for probabilistic safe autonomy in energy-constrained unmanned aerial vehicles (UAVs)**.
 
-This project studies whether probabilistic decision-making can improve return safety by estimating:
+The initial implementation focuses on **risk-aware Return-to-Home (RTH)** under battery uncertainty, battery degradation, and dynamic wind disturbances. The broader research goal is to move beyond fixed battery thresholds and build an autonomous safety supervisor that can reason about uncertain energy availability, uncertain environmental conditions, mission progress, and safety risk in real time.
+
+Instead of asking only:
+
+> "At what battery percentage should the UAV return home?"
+
+this project asks the more general research question:
+
+> **How can an autonomous UAV make safe, mission-aware decisions under coupled battery, wind, model, and planning uncertainty?**
+
+---
+
+##  Scientific Problem
+
+Small UAVs operate with limited energy reserves and are exposed to disturbances that are difficult to predict precisely. A mission that appears feasible under nominal assumptions may become unsafe when the following uncertainties interact:
+
+| Uncertainty Source | Effect on UAV Safety |
+|---|---|
+| State-of-charge estimation error | The available energy may be overestimated or underestimated. |
+| Battery aging and health degradation | The usable capacity may be lower than expected. |
+| Wind and gust disturbances | The return energy demand may increase nonlinearly. |
+| Mission geometry | Return distance and heading may change during the mission. |
+| Model mismatch | The simulated energy model may differ from the real platform. |
+| Decision timing | A late RTH trigger can make recovery impossible. |
+
+Classical deterministic RTH logic is usually based on a fixed threshold, for example `return when battery < 25%`. This is simple, but it does not explicitly estimate the probability that returning home is still feasible.
+
+This repository formulates RTH as a **probabilistic safety decision problem**:
 
 ```math
-P(\text{safe return} \mid \hat{SoC}, w, d, h_b)
+P(\text{safe return} \mid \hat{SoC}, h_b, w, d, \theta_m)
 ```
 
 where:
@@ -49,66 +71,83 @@ where:
 | Symbol | Meaning |
 |---|---|
 | `\hat{SoC}` | estimated state of charge |
-| `w` | wind disturbance profile |
-| `d` | return distance / mission geometry |
-| `h_b` | battery health factor |
+| `h_b` | battery health / usable capacity factor |
+| `w` | wind field or wind disturbance profile |
+| `d` | return distance and mission geometry |
+| `\theta_m` | uncertain energy-model parameters |
 
-The planner triggers Return-to-Home when:
+A risk-aware RTH policy triggers safety action when:
 
 ```math
 P(\text{safe return}) < \tau
 ```
 
-where `τ` is the risk threshold.
+where `τ` is a configurable safety threshold.
 
 ---
 
-##  Core Idea
+##  Framework
 
 ```text
-UAV State + Battery Estimate + Wind Estimate
-                    │
-                    ▼
-        Monte Carlo Return Feasibility
-                    │
-                    ▼
-   Risk-Aware / Adaptive / Health-Aware RTH
-                    │
-                    ▼
-      Continue Mission or Trigger Return-to-Home
+                  ┌────────────────────────────┐
+                  │ UAV Mission State           │
+                  │ position, distance, phase   │
+                  └──────────────┬─────────────┘
+                                 │
+                  ┌──────────────▼─────────────┐
+                  │ Uncertainty Estimation      │
+                  │ battery, health, wind       │
+                  └──────────────┬─────────────┘
+                                 │
+                  ┌──────────────▼─────────────┐
+                  │ Monte Carlo Risk Evaluation │
+                  │ sampled return feasibility  │
+                  └──────────────┬─────────────┘
+                                 │
+                  ┌──────────────▼─────────────┐
+                  │ Safety Decision Supervisor  │
+                  │ continue / return / abort   │
+                  └──────────────┬─────────────┘
+                                 │
+                  ┌──────────────▼─────────────┐
+                  │ Mission Outcome Analysis    │
+                  │ safety-efficiency trade-off │
+                  └────────────────────────────┘
 ```
 
-The decision layer samples possible return outcomes and evaluates whether the UAV has enough energy to reach home safely under uncertainty.
+The current implementation includes:
+
+| Component | Description |
+|---|---|
+| `deterministic_threshold` | Fixed SoC baseline policy. |
+| `risk_aware_mc` | Monte Carlo estimation of safe-return probability. |
+| `adaptive_risk_mc` | Risk-aware policy with adaptive conservativeness. |
+| `health_aware_risk_mc` | Policy that accounts for battery degradation. |
+| Battery aging study | Evaluates RTH behavior under reduced battery health. |
+| Dynamic gust study | Evaluates decision robustness under time-varying wind. |
+| Ablation study | Measures the effect of Monte Carlo sample count on runtime and decision quality. |
+| ROS 2 simulation | Provides a robotic-system integration path. |
+| HTML simulator | Enables lightweight visual exploration of the policy. |
 
 ---
 
 ##  Main Contributions
 
-| Contribution | Description |
-|---|---|
-|  **Monte Carlo RTH policy** | Estimates the probability of safe return using sampled battery, wind, and energy-demand uncertainty. |
-|  **Adaptive risk threshold** | Adjusts conservativeness according to uncertainty, wind intensity, distance, and battery health. |
-|  **Battery-health-aware planning** | Accounts for degraded battery capacity during return feasibility estimation. |
-|  **Dynamic wind gust evaluation** | Tests the policies under time-varying gust scenarios instead of only steady wind. |
-|  **Safety-efficiency analysis** | Measures both safe-return behavior and mission completion trade-offs. |
-| **Reproducible experiments** | Provides scripts, CSV outputs, and plots for systematic evaluation. |
+This repository contributes a research-oriented baseline for safe UAV autonomy:
+
+1. **Risk-aware RTH formulation** using probabilistic return feasibility instead of a deterministic battery threshold.
+2. **Monte Carlo safety estimator** for uncertain energy demand and uncertain battery availability.
+3. **Battery-health-aware decision layer** that models degraded usable capacity.
+4. **Dynamic wind disturbance evaluation** for testing return decisions under gust scenarios.
+5. **Safety-efficiency trade-off analysis** using mission completion, failure rate, safe-return rate, and energy margin.
+6. **Reproducible experimental scripts** for Monte Carlo evaluation, ablation, battery aging, and wind gust studies.
+7. **Research roadmap toward PhD-level safe autonomy**, including sequential decision making, chance-constrained planning, Bayesian prediction, and sim-to-real validation.
 
 ---
 
-##  Policies Compared
+##  Experiments
 
-| Policy | Decision Logic | Main Characteristic |
-|---|---|---|
-| `deterministic_threshold` | Fixed SoC threshold | Simple baseline, weak uncertainty handling |
-| `risk_aware_mc` | Monte Carlo safe-return probability | Probabilistic feasibility estimation |
-| `adaptive_risk_mc` | Monte Carlo + adaptive threshold | More conservative under risky conditions |
-| `health_aware_risk_mc` | Monte Carlo + battery health | Explicit battery degradation awareness |
-
----
-
-##  Key Results
-
-### Main Policy Comparison
+### Main Monte Carlo Policy Comparison
 
 ```bash
 python3 experiments/run_monte_carlo_experiments.py --trials 200 --mc-samples 500
@@ -121,9 +160,7 @@ python3 experiments/run_monte_carlo_experiments.py --trials 200 --mc-samples 500
 | adaptive_risk_mc | 52.23% | 31.00% | 21.27% | 73.31% | 0.0837 |
 | health_aware_risk_mc | 39.90% | 19.90% | 20.75% | 79.04% | 0.0843 |
 
-> **Takeaway:** the deterministic baseline preserves mission completion because it almost never triggers RTH, while Monte Carlo policies increase safe-return behavior by explicitly evaluating return feasibility.
-
----
+**Interpretation.** The deterministic baseline preserves mission completion because it rarely triggers RTH. The risk-aware policies trigger RTH more often because they explicitly evaluate return feasibility under uncertainty.
 
 ### Battery Aging Study
 
@@ -131,9 +168,7 @@ python3 experiments/run_monte_carlo_experiments.py --trials 200 --mc-samples 500
 python3 experiments/run_battery_aging_study.py --trials 200
 ```
 
-#### Safe Return Rate under Battery Health Degradation
-
-| Battery Health | Deterministic | Risk-Aware MC | Adaptive Risk | Health-Aware MC |
+| Battery Health | Deterministic Safe Return | Risk-Aware MC | Adaptive Risk | Health-Aware MC |
 |---:|---:|---:|---:|---:|
 | 100% | 2.56% | 22.54% | 30.44% | 23.29% |
 | 95% | 2.15% | 21.00% | 28.31% | 30.21% |
@@ -141,19 +176,7 @@ python3 experiments/run_battery_aging_study.py --trials 200
 | 80% | 2.38% | 27.21% | 32.48% | 40.54% |
 | 70% | 2.10% | 9.58% | 11.52% | 13.02% |
 
-#### Failure Rate under Battery Health Degradation
-
-| Battery Health | Deterministic | Risk-Aware MC | Adaptive Risk | Health-Aware MC |
-|---:|---:|---:|---:|---:|
-| 100% | 20.96% | 21.35% | 21.04% | 20.77% |
-| 95% | 31.25% | 31.56% | 32.50% | 31.79% |
-| 90% | 43.19% | 43.00% | 43.27% | 43.35% |
-| 80% | 59.35% | 58.40% | 59.06% | 59.08% |
-| 70% | 87.38% | 87.83% | 87.44% | 86.98% |
-
-> **Takeaway:** battery degradation is a dominant safety factor. Health-aware planning improves safe-return behavior under degraded batteries, especially around 90% and 80% health, but it reduces mission completion because the policy becomes more conservative.
-
----
+**Interpretation.** Battery degradation is a dominant safety factor. Health-aware RTH becomes more conservative as usable capacity decreases.
 
 ### Dynamic Wind Gust Study
 
@@ -161,29 +184,16 @@ python3 experiments/run_battery_aging_study.py --trials 200
 python3 experiments/run_wind_gust_study.py --trials 200
 ```
 
-#### Safe Return Rate under Dynamic Gusts
-
-| Gust Scenario | Deterministic | Risk-Aware MC | Adaptive Risk | Health-Aware MC |
+| Gust Scenario | Deterministic Safe Return | Risk-Aware MC | Adaptive Risk | Health-Aware MC |
 |---|---:|---:|---:|---:|
 | `gust_low` | 1.5% | 75.0% | 89.5% | 91.0% |
 | `gust_medium` | 3.0% | 76.5% | 85.0% | 85.0% |
 | `gust_high` | 0.0% | 70.0% | 73.5% | 78.5% |
 | `gust_extreme` | 1.0% | 54.5% | 60.5% | 56.0% |
 
-#### Failure Rate under Dynamic Gusts
+**Interpretation.** Dynamic wind strongly affects return feasibility. Monte Carlo policies provide a stronger safety response than fixed-threshold logic.
 
-| Gust Scenario | Deterministic | Risk-Aware MC | Adaptive Risk | Health-Aware MC |
-|---|---:|---:|---:|---:|
-| `gust_low` | 9.5% | 9.0% | 5.5% | 8.0% |
-| `gust_medium` | 9.0% | 13.0% | 8.5% | 15.0% |
-| `gust_high` | 17.0% | 24.0% | 22.5% | 20.5% |
-| `gust_extreme` | 51.0% | 39.0% | 38.5% | 44.0% |
-
-> **Takeaway:** dynamic gusts strongly stress return feasibility. Monte Carlo policies maintain much stronger safe-return behavior than deterministic thresholding, especially under low-to-high gust conditions.
-
----
-
-### Ablation Study
+### Monte Carlo Ablation Study
 
 ```bash
 python3 experiments/run_ablation_studies.py --trials 200
@@ -197,19 +207,7 @@ python3 experiments/run_ablation_studies.py --trials 200
 | 500 | 0.562 ms | 19.52% | 20.63% |
 | 1000 | 1.086 ms | 19.50% | 20.69% |
 
-> **Takeaway:** the Monte Carlo estimator stabilizes quickly. In this simulation, 50–100 samples often provide comparable decision quality, while higher sample counts increase runtime almost linearly.
-
----
-
-##  Main Conclusions
-
-1. **Deterministic thresholding is not sufficient for safety-critical RTH decisions.**
-2. **Monte Carlo risk estimation improves safe-return behavior under uncertainty.**
-3. **Adaptive risk policies provide stronger safety behavior, but reduce mission completion.**
-4. **Battery aging has a strong negative effect on return feasibility.**
-5. **Health-aware planning is valuable under degraded battery conditions.**
-6. **Dynamic wind gusts significantly increase mission risk.**
-7. **The central design trade-off is safety versus mission efficiency.**
+**Interpretation.** The estimator stabilizes quickly in the current simulation setting. Higher sample counts increase runtime approximately linearly.
 
 ---
 
@@ -217,12 +215,10 @@ python3 experiments/run_ablation_studies.py --trials 200
 
 ### Python Experiments
 
-Create and activate a Python environment:
-
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install "numpy<2" matplotlib
+pip install -r requirements.txt
 ```
 
 Run the full experimental suite:
@@ -299,6 +295,29 @@ Live demo:
 
 ---
 
+##  PhD Research Agenda
+
+The current repository can serve as the first stage of a larger doctoral research program.
+
+| Research Stage | Scientific Goal | Expected Output |
+|---|---|---|
+| Stage 1 | Risk-aware RTH under battery and wind uncertainty | Baseline framework and first publication |
+| Stage 2 | Bayesian battery state and health prediction | Probabilistic battery estimator |
+| Stage 3 | Online wind-field estimation | Wind-aware safety prediction |
+| Stage 4 | Chance-constrained or belief-space planning | Probabilistic path planning module |
+| Stage 5 | Sequential mission safety decisions | Continue / return / reroute / land policy |
+| Stage 6 | Safe reinforcement learning for risk adaptation | Learned risk threshold and policy tuning |
+| Stage 7 | Digital twin and sim-to-real validation | ROS 2 / PX4 / Gazebo / hardware experiments |
+
+See:
+
+- [`docs/PHD_RESEARCH_PROPOSAL.md`](docs/PHD_RESEARCH_PROPOSAL.md)
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- [`docs/EXPERIMENTAL_PROTOCOL.md`](docs/EXPERIMENTAL_PROTOCOL.md)
+- [`docs/ROADMAP.md`](docs/ROADMAP.md)
+
+---
+
 ##  Project Structure
 
 ```text
@@ -319,7 +338,9 @@ Risk-Aware-Return-to-Home-Policy-for-UAVs-under-Battery-Uncertainty-and-Wind-Dis
 ├── risk_rth/                    # Python implementation components
 ├── scripts/                     # Utility scripts
 ├── tests/                       # Tests
+├── docs/                        # PhD-level research documentation
 ├── uav_rth_simulator.html       # Interactive simulator
+├── requirements.txt
 ├── README.md
 └── CITATION.cff
 ```
@@ -342,24 +363,26 @@ Risk-Aware-Return-to-Home-Policy-for-UAVs-under-Battery-Uncertainty-and-Wind-Dis
 
 ---
 
-##  Research Relevance
+##  Research Positioning
 
-This repository is relevant to:
+This project is relevant to:
 
-- UAV safety and autonomy,
-- risk-aware decision making,
 - probabilistic robotics,
+- UAV safety and autonomous mission supervision,
+- decision making under uncertainty,
 - battery-aware mission planning,
+- energy-constrained robotics,
 - dynamic wind disturbance modelling,
-- simulation-based evaluation of safety-critical systems.
+- safe reinforcement learning,
+- digital twins for robotic validation.
 
-Potential future extensions include:
+The intended research contribution is not merely a better RTH trigger. The broader contribution is a **probabilistic decision architecture for UAV safety under coupled environmental and system uncertainty**.
 
-- trajectory-aware return planning,
-- spatial wind-field maps,
-- more realistic electrochemical battery aging models,
-- formal probabilistic safety bounds,
-- sim-to-real validation on UAV hardware.
+---
+
+##  Safety Notice
+
+This repository is a research and simulation framework. It is **not flight-certified software** and should not be deployed on real UAV hardware without independent verification, hardware-in-the-loop testing, fail-safe mechanisms, and compliance with applicable aviation regulations.
 
 ---
 
@@ -368,10 +391,10 @@ Potential future extensions include:
 If you use this project in research, you may cite it as:
 
 ```bibtex
-@software{grosdouli2025uavrth,
+@software{grosdouli2026_probabilistic_safe_uav_autonomy,
   author    = {Grosdouli, Panagiota},
-  title     = {Risk-Aware Return-to-Home Policy for UAVs under Battery Uncertainty and Wind Disturbances},
-  year      = {2025},
+  title     = {Probabilistic Safe Autonomy for Energy-Constrained UAVs under Battery Uncertainty and Wind Disturbances},
+  year      = {2026},
   publisher = {GitHub},
   url       = {https://github.com/PanagiotaGr/Risk-Aware-Return-to-Home-Policy-for-UAVs-under-Battery-Uncertainty-and-Wind-Disturbances},
   license   = {MIT}
@@ -400,8 +423,8 @@ This project is released under the **MIT License**. See the [LICENSE](LICENSE) f
 
 <div align="center">
 
-### Designed for safe autonomy under uncertainty.
+### Toward safe, probabilistic and energy-aware UAV autonomy.
 
-⭐ **Star this repository** if you find it useful for UAV safety, robotics, or probabilistic planning research.
+⭐ **Star this repository** if you find it useful for UAV safety, robotics, probabilistic planning, or autonomous systems research.
 
 </div>
