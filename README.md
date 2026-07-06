@@ -21,7 +21,8 @@
   <a href="#-scientific-problem">Scientific Problem</a> •
   <a href="#-framework">Framework</a> •
   <a href="#-experiments">Experiments</a> •
-  <a href="#-phd-research-agenda">PhD Agenda</a> •
+  <a href="#-doctoral-research-agenda">Doctoral Agenda</a> •
+  <a href="#-research-documentation">Research Docs</a> •
   <a href="#-citation">Citation</a>
 </p>
 
@@ -29,44 +30,44 @@
 
 ---
 
-##  Research Vision
+## Research Vision
 
 This repository is being developed as a **PhD-level research framework for probabilistic safe autonomy in energy-constrained unmanned aerial vehicles (UAVs)**.
 
-The initial implementation focuses on **risk-aware Return-to-Home (RTH)** under battery uncertainty, battery degradation, and dynamic wind disturbances. The broader research goal is to move beyond fixed battery thresholds and build an autonomous safety supervisor that can reason about uncertain energy availability, uncertain environmental conditions, mission progress, and safety risk in real time.
+The current implementation starts from **risk-aware Return-to-Home (RTH)** under battery uncertainty, battery degradation and dynamic wind disturbances. The doctoral objective is broader: to develop a probabilistic mission-safety supervisor that reasons about uncertain energy availability, uncertain environmental conditions, mission progress, model mismatch and action feasibility in real time.
 
 Instead of asking only:
 
 > "At what battery percentage should the UAV return home?"
 
-this project asks the more general research question:
+this project asks:
 
-> **How can an autonomous UAV make safe, mission-aware decisions under coupled battery, wind, model, and planning uncertainty?**
+> **How can an autonomous UAV make safe, mission-aware decisions under coupled battery, wind, model and planning uncertainty?**
 
 ---
 
-##  Scientific Problem
+## Scientific Problem
 
 Small UAVs operate with limited energy reserves and are exposed to disturbances that are difficult to predict precisely. A mission that appears feasible under nominal assumptions may become unsafe when the following uncertainties interact:
 
 | Uncertainty Source | Effect on UAV Safety |
 |---|---|
-| State-of-charge estimation error | The available energy may be overestimated or underestimated. |
-| Battery aging and health degradation | The usable capacity may be lower than expected. |
-| Wind and gust disturbances | The return energy demand may increase nonlinearly. |
-| Mission geometry | Return distance and heading may change during the mission. |
+| State-of-charge estimation error | Available energy may be overestimated or underestimated. |
+| Battery aging and health degradation | Usable capacity may be lower than expected. |
+| Wind and gust disturbances | Return energy demand may increase nonlinearly. |
+| Mission geometry | Return distance and heading change during the mission. |
 | Model mismatch | The simulated energy model may differ from the real platform. |
 | Decision timing | A late RTH trigger can make recovery impossible. |
 
-Classical deterministic RTH logic is usually based on a fixed threshold. This is simple, but it does not explicitly estimate the probability that returning home is still feasible.
+Classical deterministic RTH logic is usually based on a fixed battery threshold. This is simple, but it does not explicitly estimate the probability that returning home is still feasible.
 
-This repository formulates RTH as a **probabilistic safety decision problem**:
+This repository formulates RTH as a probabilistic safety decision problem:
 
 ```math
 P(\text{safe return} \mid \hat{SoC}, h_b, w, d, \theta_m)
 ```
 
-where `SoC` is estimated battery state, `h_b` is battery health, `w` is wind disturbance, `d` is return distance and `θ_m` represents uncertain model parameters.
+where `SoC` is estimated battery state, `h_b` is battery health, `w` is wind disturbance, `d` is return distance and `theta_m` represents uncertain model parameters.
 
 A risk-aware RTH policy triggers safety action when:
 
@@ -76,7 +77,7 @@ P(\text{safe return}) < \tau
 
 ---
 
-##  Framework
+## Framework
 
 ```text
 UAV mission state
@@ -89,7 +90,7 @@ Monte Carlo risk estimation
       ↓
 Safety decision supervisor
       ↓
-Continue mission / return home / future reroute or landing action
+Continue mission / return home / reroute / land
 ```
 
 The current implementation includes:
@@ -102,25 +103,25 @@ The current implementation includes:
 | `health_aware_risk_mc` | Policy that accounts for battery degradation. |
 | Battery aging study | Evaluates RTH behavior under reduced battery health. |
 | Dynamic gust study | Evaluates decision robustness under time-varying wind. |
-| Ablation study | Measures the effect of Monte Carlo sample count on runtime and decision quality. |
-| ROS 2 simulation | Provides a robotic-system integration path. |
+| Ablation study | Measures Monte Carlo sample count versus runtime and decision quality. |
+| ROS 2 simulation path | Provides a robotic-system integration direction. |
 | HTML simulator | Enables lightweight visual exploration of the policy. |
 
 ---
 
-##  Main Contributions
+## Main Contributions
 
 1. **Risk-aware RTH formulation** using probabilistic return feasibility instead of a deterministic battery threshold.
 2. **Monte Carlo safety estimator** for uncertain energy demand and uncertain battery availability.
 3. **Battery-health-aware decision layer** that models degraded usable capacity.
 4. **Dynamic wind disturbance evaluation** for testing return decisions under gust scenarios.
-5. **Safety-efficiency trade-off analysis** using mission completion, failure rate, safe-return rate, and energy margin.
-6. **Reproducible experimental scripts** for Monte Carlo evaluation, ablation, battery aging, and wind gust studies.
-7. **Research roadmap toward PhD-level safe autonomy**, including sequential decision making, chance-constrained planning, Bayesian prediction, and sim-to-real validation.
+5. **Safety-efficiency trade-off analysis** using mission completion, failure rate, safe-return rate and energy margin.
+6. **Reproducible experimental structure** for Monte Carlo evaluation, ablation, battery aging and wind gust studies.
+7. **Doctoral roadmap** toward sequential decision making, chance-constrained planning, Bayesian prediction and sim-to-real validation.
 
 ---
 
-##  Experiments
+## Experiments
 
 ### Main Monte Carlo Policy Comparison
 
@@ -143,26 +144,11 @@ python3 experiments/run_monte_carlo_experiments.py --trials 200 --mc-samples 500
 python3 experiments/run_battery_aging_study.py --trials 200
 ```
 
-| Battery Health | Deterministic Safe Return | Risk-Aware MC | Adaptive Risk | Health-Aware MC |
-|---:|---:|---:|---:|---:|
-| 100% | 2.56% | 22.54% | 30.44% | 23.29% |
-| 95% | 2.15% | 21.00% | 28.31% | 30.21% |
-| 90% | 1.60% | 20.52% | 28.73% | 37.21% |
-| 80% | 2.38% | 27.21% | 32.48% | 40.54% |
-| 70% | 2.10% | 9.58% | 11.52% | 13.02% |
-
 ### Dynamic Wind Gust Study
 
 ```bash
 python3 experiments/run_wind_gust_study.py --trials 200
 ```
-
-| Gust Scenario | Deterministic Safe Return | Risk-Aware MC | Adaptive Risk | Health-Aware MC |
-|---|---:|---:|---:|---:|
-| `gust_low` | 1.5% | 75.0% | 89.5% | 91.0% |
-| `gust_medium` | 3.0% | 76.5% | 85.0% | 85.0% |
-| `gust_high` | 0.0% | 70.0% | 73.5% | 78.5% |
-| `gust_extreme` | 1.0% | 54.5% | 60.5% | 56.0% |
 
 ### Monte Carlo Ablation Study
 
@@ -170,19 +156,9 @@ python3 experiments/run_wind_gust_study.py --trials 200
 python3 experiments/run_ablation_studies.py --trials 200
 ```
 
-| Samples | Runtime per Trial | Safe Return | Failure |
-|---:|---:|---:|---:|
-| 50 | 0.064 ms | 19.81% | 20.13% |
-| 100 | 0.128 ms | 19.31% | 21.21% |
-| 250 | 0.288 ms | 19.73% | 20.83% |
-| 500 | 0.562 ms | 19.52% | 20.63% |
-| 1000 | 1.086 ms | 19.50% | 20.69% |
-
 ---
 
-##  Quick Start
-
-### Python Experiments
+## Quick Start
 
 ```bash
 python3 -m venv .venv
@@ -210,7 +186,7 @@ results_wind_gust/
 
 ---
 
-##  ROS 2 Simulation
+## ROS 2 Simulation
 
 ### Prerequisites
 
@@ -262,30 +238,37 @@ Live demo:
 
 ---
 
-##  PhD Research Agenda
-
-The current repository can serve as the first stage of a larger doctoral research program.
+## Doctoral Research Agenda
 
 | Research Stage | Scientific Goal | Expected Output |
 |---|---|---|
 | Stage 1 | Risk-aware RTH under battery and wind uncertainty | Baseline framework and first publication |
 | Stage 2 | Bayesian battery state and health prediction | Probabilistic battery estimator |
 | Stage 3 | Online wind-field estimation | Wind-aware safety prediction |
-| Stage 4 | Chance-constrained or belief-space planning | Probabilistic path planning module |
+| Stage 4 | Chance-constrained or belief-space planning | Probabilistic path-planning module |
 | Stage 5 | Sequential mission safety decisions | Continue / return / reroute / land policy |
 | Stage 6 | Safe reinforcement learning for risk adaptation | Learned risk threshold and policy tuning |
 | Stage 7 | Digital twin and sim-to-real validation | ROS 2 / PX4 / Gazebo / hardware experiments |
 
-See:
+---
 
-- [`docs/PHD_RESEARCH_PROPOSAL.md`](docs/PHD_RESEARCH_PROPOSAL.md)
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
-- [`docs/EXPERIMENTAL_PROTOCOL.md`](docs/EXPERIMENTAL_PROTOCOL.md)
-- [`docs/ROADMAP.md`](docs/ROADMAP.md)
+## Research Documentation
+
+| Document | Purpose |
+|---|---|
+| [`docs/PHD_RESEARCH_PROPOSAL.md`](docs/PHD_RESEARCH_PROPOSAL.md) | Doctoral proposal, hypotheses and publication direction. |
+| [`docs/THEORETICAL_FRAMEWORK.md`](docs/THEORETICAL_FRAMEWORK.md) | Mathematical formulation of risk-aware UAV safety supervision. |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System architecture and target PhD-level module structure. |
+| [`docs/EXPERIMENTAL_PROTOCOL.md`](docs/EXPERIMENTAL_PROTOCOL.md) | Experimental design for current simulations. |
+| [`docs/REPRODUCIBILITY_PROTOCOL.md`](docs/REPRODUCIBILITY_PROTOCOL.md) | Rules for reproducible experiments and paper artifacts. |
+| [`docs/EVALUATION_MATRIX.md`](docs/EVALUATION_MATRIX.md) | Claim-to-evidence matrix for doctoral evaluation. |
+| [`docs/PUBLICATION_PLAN.md`](docs/PUBLICATION_PLAN.md) | Paper sequence and target contribution plan. |
+| [`docs/CONTRIBUTING_RESEARCH.md`](docs/CONTRIBUTING_RESEARCH.md) | Contribution rules for scientific extensions. |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Implementation roadmap toward full safe autonomy. |
 
 ---
 
-##  Project Structure
+## Project Structure
 
 ```text
 Risk-Aware-Return-to-Home-Policy-for-UAVs-under-Battery-Uncertainty-and-Wind-Disturbances/
@@ -297,6 +280,7 @@ Risk-Aware-Return-to-Home-Policy-for-UAVs-under-Battery-Uncertainty-and-Wind-Dis
 ├── scripts/                     # Utility scripts
 ├── tests/                       # Tests
 ├── docs/                        # PhD-level research documentation
+├── .github/workflows/           # Research CI
 ├── uav_rth_simulator.html       # Interactive simulator
 ├── requirements-dev.txt
 ├── README.md
@@ -305,11 +289,11 @@ Risk-Aware-Return-to-Home-Policy-for-UAVs-under-Battery-Uncertainty-and-Wind-Dis
 
 ---
 
-##  Evaluation Metrics
+## Evaluation Metrics
 
 | Metric | Meaning |
 |---|---|
-| `safe_return_rate` | Fraction of trials where RTH was triggered and the UAV had enough energy to return. |
+| `safe_return_rate` | Fraction of trials where RTH was triggered and enough energy remained to return. |
 | `failure_rate` | Fraction of trials where the UAV did not have enough energy to return safely. |
 | `rth_trigger_rate` | Fraction of trials where the policy triggered RTH. |
 | `mission_completion_rate` | Approximate fraction of mission completed before RTH or failure. |
@@ -321,30 +305,21 @@ Risk-Aware-Return-to-Home-Policy-for-UAVs-under-Battery-Uncertainty-and-Wind-Dis
 
 ---
 
-##  Research Positioning
+## Research Positioning
 
-This project is relevant to:
-
-- probabilistic robotics,
-- UAV safety and autonomous mission supervision,
-- decision making under uncertainty,
-- battery-aware mission planning,
-- energy-constrained robotics,
-- dynamic wind disturbance modelling,
-- safe reinforcement learning,
-- digital twins for robotic validation.
+This project is relevant to probabilistic robotics, UAV safety, autonomous mission supervision, decision making under uncertainty, battery-aware mission planning, energy-constrained robotics, dynamic wind disturbance modelling, safe reinforcement learning and digital twins for robotic validation.
 
 The intended research contribution is not merely a better RTH trigger. The broader contribution is a **probabilistic decision architecture for UAV safety under coupled environmental and system uncertainty**.
 
 ---
 
-##  Safety Notice
+## Safety Notice
 
-This repository is a research and simulation framework. It is **not flight-certified software** and should not be deployed on real UAV hardware without independent verification, hardware-in-the-loop testing, fail-safe mechanisms, and compliance with applicable aviation regulations.
+This repository is a research and simulation framework. It is **not flight-certified software** and should not be deployed on real UAV hardware without independent verification, hardware-in-the-loop testing, fail-safe mechanisms and compliance with applicable aviation regulations.
 
 ---
 
-##  Citation
+## Citation
 
 If you use this project in research, you may cite it as:
 
@@ -361,7 +336,7 @@ If you use this project in research, you may cite it as:
 
 ---
 
-##  Author
+## Author
 
 <div align="center">
 
@@ -373,7 +348,7 @@ Democritus University of Thrace
 
 ---
 
-##  License
+## License
 
 This project is released under the **MIT License**. See the [LICENSE](LICENSE) file for details.
 
