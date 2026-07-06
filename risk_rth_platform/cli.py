@@ -5,6 +5,7 @@ import csv
 import json
 from pathlib import Path
 
+from .benchmark import run_trials, safe_rate_with_ci
 from .config import load_scenario
 from .simulator import RiskAwareMissionSimulator
 
@@ -19,7 +20,13 @@ def main() -> None:
 
     scenario = load_scenario(args.scenario)
     simulator = RiskAwareMissionSimulator(scenario)
+    results = run_trials(simulator, args.trials)
     summary = simulator.run_benchmark(args.trials)
+    safe_rate, safe_ci95 = safe_rate_with_ci(results)
+    summary["safe_rate"] = safe_rate
+    summary["safe_rate_ci95"] = safe_ci95
+    summary["failure_rate"] = 1.0 - safe_rate
+    summary["failure_rate_ci95"] = safe_ci95
     latest_trial = simulator.run_trial(args.trials + 1)
 
     output_path = Path(args.output)
