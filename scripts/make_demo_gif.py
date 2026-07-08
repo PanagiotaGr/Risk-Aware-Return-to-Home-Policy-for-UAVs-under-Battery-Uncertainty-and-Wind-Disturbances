@@ -28,7 +28,7 @@ def _safe_probability_text(value: float) -> str:
 
 
 def main() -> None:
-    """Create `assets/demo.gif` and, when ffmpeg is available, `results/videos/demo.mp4`."""
+    """Create README, website, and video demo artifacts from simulator output."""
     simulator = MissionSimulator2D(
         SimulatorConfig(target_xy_m=(620.0, 120.0), max_time_s=190.0),
         BatteryModel(soc_noise_std=0.04, reserve_soc=0.08),
@@ -43,8 +43,10 @@ def main() -> None:
 
     assets = Path("assets")
     videos = Path("results/videos")
+    website_public = Path("website/public")
     assets.mkdir(parents=True, exist_ok=True)
     videos.mkdir(parents=True, exist_ok=True)
+    website_public.mkdir(parents=True, exist_ok=True)
 
     plt.rcParams.update(
         {
@@ -161,6 +163,7 @@ def main() -> None:
     ani = animation.FuncAnimation(fig, update, frames=len(history), interval=75, blit=False)
     fig.tight_layout()
     ani.save(assets / "demo.gif", writer="pillow", fps=12)
+    ani.save(website_public / "demo.gif", writer="pillow", fps=12)
     try:
         ani.save(videos / "demo.mp4", writer="ffmpeg", fps=12)
     except Exception:
