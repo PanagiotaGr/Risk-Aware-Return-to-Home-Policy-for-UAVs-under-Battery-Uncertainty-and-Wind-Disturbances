@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from math import hypot
 from statistics import mean
-from typing import Iterable
 
 from risk_rth.wind.field import WindField, WindSample
 
@@ -54,7 +54,7 @@ def summarize_wind_exposure(samples: list[WindSample]) -> WindExposureSummary:
     headwind_values: list[float] = []
     tailwind_values: list[float] = []
 
-    for current, next_sample in zip(samples, samples[1:]):
+    for current, next_sample in zip(samples, samples[1:], strict=False):
         dx = next_sample.x_m - current.x_m
         dy = next_sample.y_m - current.y_m
         norm = hypot(dx, dy)
