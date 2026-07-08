@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from risk_rth_platform.cli import main
 
 
