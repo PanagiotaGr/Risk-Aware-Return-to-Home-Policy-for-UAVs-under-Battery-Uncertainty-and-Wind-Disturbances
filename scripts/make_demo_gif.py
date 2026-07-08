@@ -28,7 +28,7 @@ def _safe_probability_text(value: float) -> str:
 
 
 def main() -> None:
-    """Create `assets/demo.gif` and, when ffmpeg is available, `results/videos/demo.mp4`."""
+    """Create README, website, and video demo artifacts from simulator output."""
     simulator = MissionSimulator2D(
         SimulatorConfig(target_xy_m=(620.0, 120.0), max_time_s=190.0),
         BatteryModel(soc_noise_std=0.04, reserve_soc=0.08),
@@ -43,8 +43,10 @@ def main() -> None:
 
     assets = Path("assets")
     videos = Path("results/videos")
+    website_public = Path("website/public")
     assets.mkdir(parents=True, exist_ok=True)
     videos.mkdir(parents=True, exist_ok=True)
+    website_public.mkdir(parents=True, exist_ok=True)
 
     plt.rcParams.update(
         {
@@ -72,8 +74,8 @@ def main() -> None:
     ax_map.scatter([620], [120], marker="X", s=120, label="mission target")
     ax_map.text(0, 14, "home", ha="center")
     ax_map.text(620, 136, "target", ha="center")
-    line, = ax_map.plot([], [], linewidth=2.3, label="trajectory")
-    point, = ax_map.plot([], [], marker="o", markersize=7, label="UAV")
+    (line,) = ax_map.plot([], [], linewidth=2.3, label="trajectory")
+    (point,) = ax_map.plot([], [], marker="o", markersize=7, label="UAV")
     rth_marker = ax_map.scatter([], [], marker="D", s=80, label="RTH trigger")
     wind_arrow = ax_map.arrow(520, -125, 0, 0, width=1.5, length_includes_head=True)
     ax_map.legend(loc="upper left", frameon=True)
@@ -83,7 +85,7 @@ def main() -> None:
     ax_soc.set_ylim(0, 1.02)
     ax_soc.set_ylabel("SoC")
     ax_soc.grid(True, alpha=0.25)
-    soc_line, = ax_soc.plot([], [], linewidth=2)
+    (soc_line,) = ax_soc.plot([], [], linewidth=2)
     reserve_line = ax_soc.axhline(0.08, linestyle="--", linewidth=1.2, label="reserve")
     ax_soc.legend(handles=[reserve_line], loc="upper right", frameon=True)
 
@@ -93,7 +95,7 @@ def main() -> None:
     ax_prob.set_xlabel("time [s]")
     ax_prob.set_ylabel("$\\widehat{P}_{safe}$")
     ax_prob.grid(True, alpha=0.25)
-    prob_line, = ax_prob.plot([], [], linewidth=2)
+    (prob_line,) = ax_prob.plot([], [], linewidth=2)
     tau_line = ax_prob.axhline(TAU, linestyle="--", linewidth=1.2, label=f"τ={TAU:.2f}")
     ax_prob.legend(handles=[tau_line], loc="lower left", frameon=True)
 
@@ -161,6 +163,7 @@ def main() -> None:
     ani = animation.FuncAnimation(fig, update, frames=len(history), interval=75, blit=False)
     fig.tight_layout()
     ani.save(assets / "demo.gif", writer="pillow", fps=12)
+    ani.save(website_public / "demo.gif", writer="pillow", fps=12)
     try:
         ani.save(videos / "demo.mp4", writer="ffmpeg", fps=12)
     except Exception:
