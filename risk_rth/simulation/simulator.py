@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
-from numpy.typing import NDArray
 
 from risk_rth.models.battery import BatteryModel
 from risk_rth.models.energy import EnergyModel
@@ -94,7 +93,16 @@ class MissionSimulator2D:
             energy_used = self.energy.step_energy_wh(velocity, wind_xy, self.config.dt_s)
             soc = self.battery.drain_soc(soc, energy_used)
             if soc <= 0.0:
-                return SimulationResult(policy.name, False, True, returning_home, 0.0, distance_completed, rth_trigger_time_s, history)
+                return SimulationResult(
+                    policy.name,
+                    False,
+                    True,
+                    returning_home,
+                    0.0,
+                    distance_completed,
+                    rth_trigger_time_s,
+                    history,
+                )
 
             previous = position.copy()
             position = position + velocity * self.config.dt_s
@@ -114,4 +122,13 @@ class MissionSimulator2D:
                 }
             )
 
-        return SimulationResult(policy.name, False, True, returning_home, soc, distance_completed, rth_trigger_time_s, history)
+        return SimulationResult(
+            policy.name,
+            False,
+            True,
+            returning_home,
+            soc,
+            distance_completed,
+            rth_trigger_time_s,
+            history,
+        )
