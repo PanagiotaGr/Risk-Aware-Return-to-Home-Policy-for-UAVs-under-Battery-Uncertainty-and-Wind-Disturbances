@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from risk_rth.wind import ConstantWindField, GaussianWindField, GridWindField, SinusoidalGustWindField
+from risk_rth.wind import (
+    ConstantWindField,
+    GaussianWindField,
+    GridWindField,
+    SinusoidalGustWindField,
+)
 
 
 def test_constant_wind_field_returns_same_vector() -> None:
