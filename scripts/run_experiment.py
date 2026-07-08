@@ -19,10 +19,11 @@ from risk_rth.planning.policies import (
 from risk_rth.simulation.simulator import MissionSimulator2D, SimulatorConfig
 from risk_rth.uncertainty.monte_carlo import MonteCarloRiskEstimator
 from risk_rth.utils.config import load_yaml
-from risk_rth.visualization.plots import plot_timeseries, plot_trajectory
+from risk_rth.visualization.plots import plot_timeseries, plot_trajectory, plot_wind_timeseries
 
 
 def build_policy(name: str, cfg: dict):
+    """Build an RTH policy from YAML configuration."""
     if name == "fixed_battery_threshold":
         return FixedBatteryThresholdPolicy(threshold_soc=float(cfg.get("threshold_soc", 0.25)))
     if name == "distance_based_rth":
@@ -69,8 +70,14 @@ def main() -> None:
     representative = results[0]
     if representative.history:
         plot_trajectory(representative.history, figures_dir / "trajectory.png")
-        plot_timeseries(representative.history, "soc", "battery SoC", figures_dir / "battery_soc.png")
-        plot_timeseries(representative.history, "p_safe", "safe-return probability", figures_dir / "p_safe.png")
+        plot_timeseries(representative.history, "soc", "battery_soc", figures_dir / "battery_soc.png")
+        plot_timeseries(
+            representative.history,
+            "p_safe",
+            "estimated safe-return probability",
+            figures_dir / "p_safe.png",
+        )
+        plot_wind_timeseries(representative.history, figures_dir / "wind.png")
 
     print(metrics)
 
