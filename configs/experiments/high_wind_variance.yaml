@@ -1,0 +1,17 @@
+name: high_wind_variance
+seed: 25
+trials: 20
+simulation:
+  target_xy_m: [620.0, 80.0]
+  max_time_s: 240.0
+battery:
+  soc_noise_std: 0.04
+wind:
+  mean_xy_mps: [-1.0, 0.5]
+  std_mps: 2.0
+  gust_amplitude_mps: 0.6
+energy: {}
+policy:
+  name: risk_aware_mc
+  tau: 0.95
+  mc_samples: 1024
