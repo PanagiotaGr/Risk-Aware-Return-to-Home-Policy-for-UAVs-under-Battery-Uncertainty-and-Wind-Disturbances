@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from math import atan2, cos, sin
+
 from .models import EnergyModel, UAVState, Uncertainty, estimate_safe_return_probability, should_trigger_rth
 
 
