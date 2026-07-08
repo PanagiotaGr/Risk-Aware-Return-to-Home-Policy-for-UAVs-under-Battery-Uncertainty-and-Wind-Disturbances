@@ -23,3 +23,5 @@ jobs:
         run: pytest -q
       - name: Experiment smoke test
         run: python scripts/run_experiment.py --config configs/experiments/nominal.yaml --output-dir results/ci-smoke
+      - name: Demo GIF smoke test
+        run: python scripts/make_demo_gif.py
