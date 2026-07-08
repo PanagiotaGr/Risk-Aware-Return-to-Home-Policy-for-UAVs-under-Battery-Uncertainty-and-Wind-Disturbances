@@ -1,0 +1,30 @@
+name: nominal
+seed: 7
+trials: 20
+simulation:
+  dt_s: 1.0
+  cruise_speed_mps: 8.0
+  max_time_s: 220.0
+  initial_soc: 1.0
+  home_xy_m: [0.0, 0.0]
+  target_xy_m: [600.0, 0.0]
+  landing_radius_m: 5.0
+battery:
+  capacity_wh: 100.0
+  soc_noise_std: 0.03
+  health: 1.0
+  reserve_soc: 0.08
+wind:
+  mean_xy_mps: [0.0, 0.0]
+  std_mps: 0.5
+  gust_amplitude_mps: 0.0
+energy:
+  base_wh_per_m: 0.012
+  airspeed_mps: 8.0
+  headwind_gain: 0.08
+  crosswind_gain: 0.03
+  safety_factor: 1.15
+policy:
+  name: risk_aware_mc
+  tau: 0.95
+  mc_samples: 512

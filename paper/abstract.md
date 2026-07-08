@@ -1,0 +1,3 @@
+# Abstract Scaffold
+
+This repository investigates risk-aware return-to-home decision-making for UAV missions under uncertain battery state and stochastic wind disturbances. The current software implements a controlled 2D simulation framework, lightweight battery and wind uncertainty models, wind-aware energy-to-home estimation, and a Monte Carlo policy that triggers return-to-home when the estimated probability of safe return falls below a configurable threshold. The project is intended as reproducible simulation software accompanying a future robotics paper. No real-flight performance or benchmark superiority is claimed without generated experimental evidence and platform validation.
