@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-n
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -48,7 +48,9 @@ class MonteCarloRiskEstimator:
         )
         safe = required < available
         p_safe = float(np.mean(safe))
-        half_width = self.confidence_z * np.sqrt(max(p_safe * (1.0 - p_safe), 1e-12) / self.n_samples)
+        half_width = self.confidence_z * np.sqrt(
+            max(p_safe * (1.0 - p_safe), 1e-12) / self.n_samples
+        )
         return RiskEstimate(
             p_safe=p_safe,
             ci_low=max(0.0, p_safe - half_width),
