@@ -1,0 +1,16 @@
+name: aggressive_tau
+seed: 27
+trials: 20
+simulation:
+  target_xy_m: [700.0, 120.0]
+  max_time_s: 280.0
+battery:
+  soc_noise_std: 0.05
+wind:
+  mean_xy_mps: [-1.5, 0.4]
+  std_mps: 1.0
+energy: {}
+policy:
+  name: risk_aware_mc
+  tau: 0.80
+  mc_samples: 512
