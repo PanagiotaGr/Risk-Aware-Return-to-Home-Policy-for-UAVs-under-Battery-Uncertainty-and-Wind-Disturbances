@@ -32,7 +32,7 @@ class GridWindField:
         width = len(self.u_grid[0])
         if width == 0:
             raise ValueError("wind grids must not contain empty rows")
-        for u_row, v_row in zip(self.u_grid, self.v_grid):
+        for u_row, v_row in zip(self.u_grid, self.v_grid, strict=True):
             if len(u_row) != width or len(v_row) != width:
                 raise ValueError("wind grid rows must have consistent width")
 
