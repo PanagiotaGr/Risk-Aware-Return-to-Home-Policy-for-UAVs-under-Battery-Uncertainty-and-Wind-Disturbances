@@ -1,6 +1,11 @@
 import unittest
 
-from risk_rth.models import UAVState, Uncertainty, estimate_safe_return_probability, should_trigger_rth
+from risk_rth.models import (
+    UAVState,
+    Uncertainty,
+    estimate_safe_return_probability,
+    should_trigger_rth,
+)
 
 
 class RiskPolicyTests(unittest.TestCase):
