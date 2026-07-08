@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import random
 from dataclasses import dataclass
 from math import cos, hypot, pi
-import random
 
 
 @dataclass(frozen=True)
