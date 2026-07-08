@@ -1,14 +1,16 @@
 import glob
 import os
-import pandas as pd
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
 HOME = np.array([0.0, 0.0])
 GOAL = np.array([5.0, 0.0])
 
 HOME_EPS = 0.25
 GOAL_EPS = 0.25
+
 
 def classify_run(df):
     # positions
@@ -37,6 +39,7 @@ def classify_run(df):
         "b_final": float(df["battery_true"].iloc[-1]),
     }
 
+
 def main():
     log_dir = os.path.expanduser("~/uav_ws/logs")
     files = sorted(glob.glob(os.path.join(log_dir, "run_*.csv")))
@@ -52,7 +55,7 @@ def main():
         rows.append(r)
 
     res = pd.DataFrame(rows)
-    print(res[["file","mission_success","safe_return","crashed","reached_goal","reached_home","b_final"]])
+    print(res[["file", "mission_success", "safe_return", "crashed", "reached_goal", "reached_home", "b_final"]])
 
     n = len(res)
     print("\nSummary over", n, "runs")
@@ -64,7 +67,7 @@ def main():
     rates = [
         res["mission_success"].mean(),
         res["safe_return"].mean(),
-        res["crashed"].mean()
+        res["crashed"].mean(),
     ]
     labels = ["mission_success", "safe_return", "crash"]
 
@@ -73,6 +76,7 @@ def main():
     plt.ylim(0, 1)
     plt.title("Rates over runs")
     plt.show()
+
 
 if __name__ == "__main__":
     main()
