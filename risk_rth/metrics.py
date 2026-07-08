@@ -6,9 +6,9 @@ used by standalone experiments, notebooks, and ROS-adjacent tooling.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from math import sqrt
 from statistics import mean, pstdev
-from typing import Iterable, Sequence
 
 
 def rate(values: Iterable[bool]) -> float:
