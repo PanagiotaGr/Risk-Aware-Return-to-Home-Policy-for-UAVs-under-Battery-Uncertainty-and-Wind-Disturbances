@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="720" viewBox="0 0 1400 720" role="img" aria-labelledby="title desc">
+<title id="title">Risk-aware UAV return-to-home decision map</title>
+<desc id="desc">A UAV evaluates battery belief, wind uncertainty, candidate routes, safe-arrival probability, and mission actions.</desc>
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07111f"/><stop offset="1" stop-color="#102944"/></linearGradient>
+  <linearGradient id="route" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#4de2c5"/><stop offset="1" stop-color="#7cb8ff"/></linearGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="1400" height="720" rx="34" fill="url(#bg)"/>
+<text x="70" y="90" fill="#f4f8ff" font-family="Inter,Arial" font-size="48" font-weight="700">RiskAwareUAV-RTH</text>
+<text x="72" y="132" fill="#9fc1df" font-family="Inter,Arial" font-size="22">Probabilistic return, rerouting, and safe-landing decisions under battery and wind uncertainty</text>
+<g font-family="Inter,Arial">
+  <rect x="70" y="190" width="250" height="130" rx="22" fill="#102b43" stroke="#4de2c5"/>
+  <text x="95" y="228" fill="#8ff1dc" font-size="19" font-weight="700">BATTERY BELIEF</text>
+  <text x="95" y="264" fill="#e6f2ff" font-size="17">SoC mean ± variance</text><text x="95" y="291" fill="#a9bfd3" font-size="15">health · usable capacity</text>
+  <rect x="70" y="360" width="250" height="130" rx="22" fill="#102b43" stroke="#7cb8ff"/>
+  <text x="95" y="398" fill="#9ac9ff" font-size="19" font-weight="700">WIND BELIEF</text>
+  <text x="95" y="434" fill="#e6f2ff" font-size="17">direction · gusts</text><text x="95" y="461" fill="#a9bfd3" font-size="15">forecast bias · uncertainty</text>
+  <rect x="400" y="235" width="300" height="220" rx="28" fill="#122f4b" stroke="#ffcb6b" stroke-width="2"/>
+  <text x="435" y="278" fill="#ffd98d" font-size="20" font-weight="700">CANDIDATE ACTIONS</text>
+  <text x="435" y="319" fill="#edf5ff" font-size="18">CONTINUE MISSION</text><text x="435" y="352" fill="#edf5ff" font-size="18">DIRECT RETURN</text><text x="435" y="385" fill="#edf5ff" font-size="18">WIND-AWARE REROUTE</text><text x="435" y="418" fill="#edf5ff" font-size="18">ALTERNATE LANDING</text>
+  <path d="M320 255 C350 255 365 285 400 300M320 425 C350 425 365 390 400 380" fill="none" stroke="url(#route)" stroke-width="5"/>
+  <rect x="790" y="235" width="260" height="220" rx="28" fill="#102b43" stroke="#b993ff" stroke-width="2"/>
+  <text x="825" y="278" fill="#d5bcff" font-size="20" font-weight="700">SAFE ARRIVAL</text>
+  <text x="825" y="330" fill="#f4f8ff" font-size="44" font-weight="700">P<tspan baseline-shift="sub" font-size="24">safe</tspan></text>
+  <text x="825" y="374" fill="#a9bfd3" font-size="16">Monte Carlo estimate</text><text x="825" y="402" fill="#a9bfd3" font-size="16">+ finite-sample interval</text>
+  <path d="M700 345 H790" stroke="#b993ff" stroke-width="5" filter="url(#glow)"/>
+  <rect x="1130" y="180" width="200" height="100" rx="20" fill="#103d35" stroke="#4de2c5"/>
+  <text x="1160" y="220" fill="#8ff1dc" font-size="18" font-weight="700">PROCEED</text><text x="1160" y="250" fill="#d9fff6" font-size="15">margin acceptable</text>
+  <rect x="1130" y="310" width="200" height="100" rx="20" fill="#3d3215" stroke="#ffcb6b"/>
+  <text x="1160" y="350" fill="#ffd98d" font-size="18" font-weight="700">RETURN / REROUTE</text><text x="1160" y="380" fill="#fff0c6" font-size="15">risk increasing</text>
+  <rect x="1130" y="440" width="200" height="100" rx="20" fill="#441f2b" stroke="#ff6f91"/>
+  <text x="1160" y="480" fill="#ff9ab1" font-size="18" font-weight="700">LAND SAFELY</text><text x="1160" y="510" fill="#ffdce4" font-size="15">home unreachable</text>
+  <path d="M1050 345 C1090 345 1090 230 1130 230M1050 345 H1130M1050 345 C1090 345 1090 490 1130 490" fill="none" stroke="#d6e5f4" stroke-width="3" opacity=".75"/>
+  <circle cx="615" cy="590" r="28" fill="#4de2c5"/><path d="M585 590h60M615 560v60" stroke="#07111f" stroke-width="7"/>
+  <text x="660" y="580" fill="#f4f8ff" font-size="19" font-weight="700">Research evidence boundary</text>
+  <text x="660" y="611" fill="#a9bfd3" font-size="16">Simulation-only · no flight validation · no certified safety guarantee</text>
+</g>
+</svg>
